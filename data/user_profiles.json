@@ -1,0 +1,29 @@
+{
+  "user_balanced": {
+    "user_id": "user_balanced",
+    "partner_affinity": {
+      "dm": 0.33,
+      "edeka": 0.33,
+      "amazon": 0.33
+    },
+    "is_new_user": false
+  },
+  "user_edeka_heavy": {
+    "user_id": "user_edeka_heavy",
+    "partner_affinity": {
+      "dm": 0.2,
+      "edeka": 0.7,
+      "amazon": 0.1
+    },
+    "is_new_user": false
+  },
+  "user_new": {
+    "user_id": "user_new",
+    "partner_affinity": {
+      "dm": 0.33,
+      "edeka": 0.33,
+      "amazon": 0.33
+    },
+    "is_new_user": true
+  }
+}
