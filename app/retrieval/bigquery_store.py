@@ -1,3 +1,62 @@
+"""BigQuery-backed vector store — production stub.
+
+This class implements the VectorStore interface against BigQuery's VECTOR_SEARCH
+function, intended as the production backend at PAYBACK scale.
+
+WHY BIGQUERY VECTOR SEARCH:
+    PAYBACK already operates a large BigQuery footprint for transactional and
+    analytics data. Co-locating the product embedding index in BigQuery means:
+    - No separate vector DB to operate, monitor, or pay for
+    - Native joins between embeddings and other product/user signals (purchase
+      history, partner data, point balances) — critical for the loyalty layer
+    - Vertex AI's text-multilingual-embedding-002 produces embeddings that BigQuery
+      can store and query natively via the ML.GENERATE_EMBEDDING + VECTOR_SEARCH
+      functions
+    - Scale: BigQuery handles 100M+ row vector indexes without operational burden
+
+PRODUCTION SCHEMA:
+    CREATE TABLE `project.payback_assistant.products` (
+      product_id STRING,
+      partner STRING,
+      name STRING,
+      description STRING,
+      category STRING,
+      price_eur FLOAT64,
+      points_multiplier FLOAT64,
+      active_promo BOOL,
+      promo_text STRING,
+      embedding ARRAY<FLOAT64>
+    );
+
+    CREATE VECTOR INDEX products_idx
+    ON `project.payback_assistant.products` (embedding)
+    OPTIONS(index_type='IVF', distance_type='COSINE');
+
+QUERY PATTERN:
+    SELECT base.*, distance
+    FROM VECTOR_SEARCH(
+      TABLE `project.payback_assistant.products`,
+      'embedding',
+      (SELECT ml_generate_embedding_result FROM ML.GENERATE_EMBEDDING(
+        MODEL `project.payback_assistant.embedding_model`,
+        (SELECT @query AS content)
+      )),
+      top_k => 10,
+      distance_type => 'COSINE'
+    );
+
+MIGRATION PATH:
+    1. Provision Vertex AI embedding model + BigQuery dataset via Terraform
+    2. Backfill: read catalogs/*.json, write rows with ML.GENERATE_EMBEDDING
+    3. Set VECTOR_STORE=bigquery in env — the rest of the app is unchanged
+       (this is why the abstract VectorStore interface matters)
+
+WHY NOT IMPLEMENTED HERE:
+    Out of scope for the local development environment. The local ChromaDB store
+    has identical behavior at this scale (~700 products) and avoids GCP billing
+    during development. The interface is identical, so the swap is configuration-
+    only at deploy time.
+"""
 from __future__ import annotations
 
 from typing import Optional
@@ -9,68 +68,9 @@ from app.retrieval.vector_store import VectorStore
 class BigQueryVectorStore(VectorStore):
     """Production vector store backed by BigQuery VECTOR_SEARCH and Vertex AI embeddings.
 
-    Architecture overview
-    ---------------------
-    This backend is designed for PAYBACK's GCP production environment where latency
-    requirements allow ~200 ms round-trips and the corpus can grow to millions of
-    products across all partners.
-
-    Embedding model
-    ~~~~~~~~~~~~~~~
-    Uses ``text-multilingual-embedding-002`` from Vertex AI, which supports both
-    German and English — matching the PAYBACK user base.  Embeddings are 768-dimensional
-    and stored in a FLOAT64 REPEATED column named ``embedding`` in BigQuery.
-
-    Indexing
-    ~~~~~~~~
-    Products are ingested via a batch Cloud Run job that:
-      1. Calls ``aiplatform.TextEmbeddingModel.get_embeddings()`` in batches of 250.
-      2. Streams results to BigQuery with ``google-cloud-bigquery`` client.
-      3. A scheduled ``CREATE VECTOR INDEX`` DDL refreshes the IVF index nightly.
-
-    Query path
-    ~~~~~~~~~~
-    ``search()`` executes a parameterised SQL query of the form::
-
-        SELECT
-            base.*,
-            distance
-        FROM
-            VECTOR_SEARCH(
-                TABLE `{project}.{dataset}.products`,
-                'embedding',
-                (SELECT ml_generate_embedding_result
-                 FROM ML.GENERATE_EMBEDDING(
-                     MODEL `{project}.{dataset}.embedding_model`,
-                     (SELECT @query AS content)
-                 )),
-                top_k => @top_k,
-                distance_type => 'COSINE'
-            )
-        WHERE
-            (@partner IS NULL OR base.partner = @partner)
-            AND base.active = TRUE
-        ORDER BY distance ASC
-
-    Cost model
-    ~~~~~~~~~~
-    * Embedding inference: ~$0.0001 per 1 k characters (Vertex AI pricing).
-    * VECTOR_SEARCH: billed as BigQuery on-demand per TB scanned; the IVF index
-      reduces scans by ~95 % on a 1 M-row table.
-    * Typical per-query cost at 300 k products: < €0.0005.
-
-    Authentication
-    ~~~~~~~~~~~~~~
-    Requires Application Default Credentials with roles:
-    ``roles/bigquery.dataViewer``, ``roles/bigquery.jobUser``,
-    ``roles/aiplatform.user``.
-
-    Implementation note
-    ~~~~~~~~~~~~~~~~~~~
-    This class intentionally raises ``NotImplementedError`` so that the local
-    ChromaDB backend is used during development.  Swap ``VECTOR_STORE=bigquery``
-    in ``.env`` when deploying to GCP and implement the body of each method using
-    ``google-cloud-bigquery`` and ``google-cloud-aiplatform`` SDKs.
+    See module docstring for full architecture, schema, and migration path.
+    All methods raise NotImplementedError — set VECTOR_STORE=bigquery in .env
+    and implement using google-cloud-bigquery + google-cloud-aiplatform SDKs.
     """
 
     async def add(self, products: list[Product]) -> None:
