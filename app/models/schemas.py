@@ -92,6 +92,26 @@ class IntentResult(BaseModel):
     reasoning: str = Field(
         ..., description="LLM reasoning trace for the intent classification"
     )
+    is_basket_query: bool = Field(
+        default=False,
+        description=(
+            "True if the query implies multiple related products typically bought together "
+            "(e.g. 'pasta dinner', 'Geburtstagsparty', 'ingredients for tiramisu', 'stuff for a hike'). "
+            "False for single-item queries ('wireless mouse', 'Schokolade'). "
+            "The router uses this signal to trigger LLM-driven query expansion before retrieval."
+        ),
+    )
+
+
+class ExpandedQueries(BaseModel):
+    """Output of the query expander — sub-queries for basket-style intents."""
+
+    sub_queries: list[str] = Field(
+        min_length=3,
+        max_length=5,
+        description="3-5 related search queries derived from the user's basket intent.",
+    )
+    reasoning: str = Field(description="One sentence explaining the decomposition.")
 
 
 class ProductRecommendation(BaseModel):
@@ -102,7 +122,10 @@ class ProductRecommendation(BaseModel):
         ..., description="Raw cosine similarity from vector search", ge=0.0, le=1.0
     )
     loyalty_boost: float = Field(
-        ..., description="Computed loyalty/promo boost component", ge=0.0
+        ..., description="Computed commercial loyalty/promo boost component", ge=0.0
+    )
+    diversity_bonus: float = Field(
+        default=0.0, description="Partner diversity bonus applied during ranking", ge=0.0
     )
     final_score: float = Field(
         ..., description="Weighted composite score used for ranking", ge=0.0
@@ -145,4 +168,11 @@ class AssistantResponse(BaseModel):
     latency_ms: float = Field(..., description="End-to-end request latency in milliseconds")
     estimated_cost_eur: float = Field(
         ..., description="Estimated LLM inference cost for this request in EUR", ge=0.0
+    )
+    debug_expanded_queries: Optional[list[str]] = Field(
+        default=None,
+        description=(
+            "Sub-queries used when basket expansion ran. Debug field only — "
+            "production deployments should gate this behind a debug flag."
+        ),
     )

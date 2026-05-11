@@ -18,6 +18,7 @@ from typing import Optional
 
 from app.agents.clarification import ClarificationAgent
 from app.agents.intent_agent import IntentAgent, get_default_intent_agent
+from app.agents.query_expander import QueryExpander, get_default_query_expander
 from app.config import settings
 from app.llm.claude_client import ClaudeClient
 from app.models.schemas import (
@@ -43,9 +44,15 @@ TOKENS_PER_INTENT_CALL_INPUT = 400
 TOKENS_PER_INTENT_CALL_OUTPUT = 150
 TOKENS_PER_CLARIFICATION_CALL_INPUT = 600
 TOKENS_PER_CLARIFICATION_CALL_OUTPUT = 100
+TOKENS_PER_EXPANSION_CALL_INPUT = 300
+TOKENS_PER_EXPANSION_CALL_OUTPUT = 80
 
 
-def estimate_cost(intent_calls: int, clarification_calls: int) -> float:
+def estimate_cost(
+    intent_calls: int,
+    clarification_calls: int,
+    expansion_calls: int = 0,
+) -> float:
     """Return estimated total cost in EUR for this request's LLM calls."""
     intent_cost = intent_calls * (
         TOKENS_PER_INTENT_CALL_INPUT / 1000 * COST_PER_1K_INPUT_TOKENS_EUR
@@ -55,7 +62,11 @@ def estimate_cost(intent_calls: int, clarification_calls: int) -> float:
         TOKENS_PER_CLARIFICATION_CALL_INPUT / 1000 * COST_PER_1K_INPUT_TOKENS_EUR
         + TOKENS_PER_CLARIFICATION_CALL_OUTPUT / 1000 * COST_PER_1K_OUTPUT_TOKENS_EUR
     )
-    return intent_cost + clarification_cost
+    expansion_cost = expansion_calls * (
+        TOKENS_PER_EXPANSION_CALL_INPUT / 1000 * COST_PER_1K_INPUT_TOKENS_EUR
+        + TOKENS_PER_EXPANSION_CALL_OUTPUT / 1000 * COST_PER_1K_OUTPUT_TOKENS_EUR
+    )
+    return intent_cost + clarification_cost + expansion_cost
 
 
 # ---------------------------------------------------------------------------
@@ -76,11 +87,13 @@ class Router:
         clarification_agent: ClarificationAgent,
         vector_store: VectorStore,
         ranker: LoyaltyRanker,
+        query_expander: QueryExpander | None = None,
     ) -> None:
         self.intent_agent = intent_agent
         self.clarification_agent = clarification_agent
         self.vector_store = vector_store
         self.ranker = ranker
+        self.query_expander = query_expander
 
     async def handle(
         self,
@@ -121,12 +134,12 @@ class Router:
                     question=(
                         "Ich kann dir helfen, Produkte bei dm, EDEKA und Amazon zu finden. "
                         "Für Fragen zu Punkten, deinem Konto oder Service besuche bitte "
-                        "help.payback.de oder den PAYBACK-Support."
+                        "https://www.payback.group/de/kontakt oder den PAYBACK-Support."
                     ),
                     suggested_options=[
                         "Stattdessen ein Produkt suchen",
                         "Angebote durchsuchen",
-                        "Zu help.payback.de",
+                        "Zu https://www.payback.group/de/kontakt",
                     ],
                 )
             else:
@@ -134,12 +147,12 @@ class Router:
                     question=(
                         "I can help you find products across dm, EDEKA, and Amazon — "
                         "but for points, account, or service questions, please visit "
-                        "help.payback.de or contact PAYBACK support."
+                        "https://www.payback.group/en/contact or contact PAYBACK support."
                     ),
                     suggested_options=[
                         "Find a product instead",
                         "Browse deals",
-                        "Go to help.payback.de",
+                        "Go to https://www.payback.group/en/contact",
                     ],
                 )
             latency_ms = (time.perf_counter() - start) * 1000
@@ -192,11 +205,31 @@ class Router:
             and intent.confidence >= settings.intent_confidence_threshold
             and intent.intent != Intent.support
         ):
-            retrieved = await self.vector_store.search(
-                intent.extracted_query,
-                top_k=10,
-                partner_filter=intent.target_partner,
-            )
+            expanded_queries: list[str] | None = None
+            did_expand = intent.is_basket_query and self.query_expander is not None
+
+            if did_expand:
+                sub_queries = await self.query_expander.expand(
+                    intent.extracted_query, intent.language
+                )
+                expanded_queries = sub_queries
+                all_results: dict[str, tuple] = {}
+                for sub_q in sub_queries:
+                    results = await self.vector_store.search(
+                        sub_q, top_k=8, partner_filter=intent.target_partner
+                    )
+                    for product, score in results:
+                        existing = all_results.get(product.product_id)
+                        if existing is None or existing[1] < score:
+                            all_results[product.product_id] = (product, score)
+                retrieved = sorted(all_results.values(), key=lambda x: -x[1])[:15]
+            else:
+                retrieved = await self.vector_store.search(
+                    intent.extracted_query,
+                    top_k=10,
+                    partner_filter=intent.target_partner,
+                )
+
             ranked = await self.ranker.rank(retrieved, user_context)
             latency_ms = (time.perf_counter() - start) * 1000
             return AssistantResponse(
@@ -206,7 +239,12 @@ class Router:
                 clarification=None,
                 navigation_target=None,
                 latency_ms=latency_ms,
-                estimated_cost_eur=estimate_cost(intent_calls=1, clarification_calls=0),
+                estimated_cost_eur=estimate_cost(
+                    intent_calls=1,
+                    clarification_calls=0,
+                    expansion_calls=1 if did_expand else 0,
+                ),
+                debug_expanded_queries=expanded_queries,
             )
 
         # ------------------------------------------------------------------
@@ -239,15 +277,17 @@ class Router:
 
 
 def get_default_router() -> Router:
-    """Wire up the default router using ClaudeClient, LocalChromaStore, and LoyaltyRanker stub."""
+    """Wire up the default router using ClaudeClient, LocalChromaStore, and LoyaltyRanker."""
     llm = ClaudeClient()
     intent_agent = get_default_intent_agent()
     clarification_agent = ClarificationAgent(llm)
-    vector_store = LocalChromaStore(persist_dir=settings.chroma_persist_dir) # changes when swapping with BigQuery
+    query_expander = get_default_query_expander()
+    vector_store = LocalChromaStore(persist_dir=settings.chroma_persist_dir)  # swap for BigQuery in prod
     ranker = LoyaltyRanker()
     return Router(
         intent_agent=intent_agent,
         clarification_agent=clarification_agent,
         vector_store=vector_store,
         ranker=ranker,
+        query_expander=query_expander,
     )

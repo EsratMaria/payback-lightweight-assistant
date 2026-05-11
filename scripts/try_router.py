@@ -18,6 +18,12 @@ QUERIES = [
     "how do I redeem my points",
     "wireless mouse",
     "Schokolade",
+    "take me to the shop",
+    "stuff for a pasta dinner",
+    "ingredients for tiramisu",
+    "alles für ein Wochenende am See",
+    "Geburtstagsparty Snacks",
+    "USB-C charger",
 ]
 
 
@@ -37,12 +43,17 @@ async def main() -> None:
         print(f"  latency: {response.latency_ms:.0f}ms")
         print(f"  cost:    €{response.estimated_cost_eur:.5f}")
 
+        print(f"  basket:  {response.intent_result.is_basket_query}")
         if response.response_type == "recommendations":
+            if response.debug_expanded_queries:
+                print(f"  expanded into: {response.debug_expanded_queries}")
             print(f"  results: {len(response.recommendations)} products")
             for rec in response.recommendations[:5]:
                 print(
                     f"    {rec.rank}. [{rec.product.partner.value}] "
-                    f"{rec.product.name} (score={rec.final_score:.2f})"
+                    f"{rec.product.name} "
+                    f"(sem={rec.semantic_score:.2f} boost={rec.loyalty_boost:.2f} "
+                    f"div={rec.diversity_bonus:.2f} final={rec.final_score:.2f})"
                 )
         elif response.response_type == "clarification":
             print(f"  question: {response.clarification.question}")

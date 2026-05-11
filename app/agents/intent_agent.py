@@ -30,7 +30,8 @@ INTENT_SYSTEM_PROMPT = (
     '- target_partner: "dm", "edeka", "amazon", or null. '
     "If the user mentions a partner that is not one of these three "
     '(e.g., "REWE", "Lidl", "Aldi"), set target_partner to null and let the search '
-    "span our available partners.\n\n"
+    "span our available partners.\n"
+    "- is_basket_query: true or false\n\n"
     "Always provide a brief reasoning trace explaining your classification, "
     "including any signals dropped or assumptions made."
 )
@@ -63,7 +64,8 @@ Definitions:
         - "shampoo" → target_partner=null (no partner mentioned)
 - extracted_query: a cleaned version of the query suitable for semantic search. Strip filler words; preserve intent. For navigational queries this can be empty.
 - confidence: 0.0-1.0 - how certain you are about the classification. Use lower confidence when the query is borderline.
-- reasoning: ONE short sentence explaining your decision. This is logged for debugging."""
+- reasoning: ONE short sentence explaining your decision. This is logged for debugging.
+- is_basket_query: true if this query implies multiple related products typically bought together (e.g. "pasta dinner", "Geburtstagsparty", "ingredients for tiramisu", "stuff for a hike", "alles für ein Wochenende am See"). false for single-item queries ("wireless mouse", "Schokolade", "Windeln"). When in doubt, default to false."""
 
 
 # ---------------------------------------------------------------------------

@@ -28,6 +28,7 @@ def _make_intent(
     target_partner: Partner | None = None,
     extracted_query: str = "test query",
     reasoning: str = "test",
+    is_basket_query: bool = False,
 ) -> IntentResult:
     return IntentResult(
         language=language,
@@ -37,6 +38,7 @@ def _make_intent(
         extracted_query=extracted_query,
         target_partner=target_partner,
         reasoning=reasoning,
+        is_basket_query=is_basket_query,
     )
 
 
@@ -95,10 +97,14 @@ class MockVectorStore:
     def __init__(self, results: list[tuple[Product, float]] | None = None) -> None:
         self._results = results or []
         self.search_called = False
+        self.search_call_count = 0
+        self.search_queries: list[str] = []
         self.last_partner_filter = "not_called"
 
     async def search(self, query, top_k=10, partner_filter=None):
         self.search_called = True
+        self.search_call_count += 1
+        self.search_queries.append(query)
         self.last_partner_filter = partner_filter
         return self._results
 
@@ -107,6 +113,16 @@ class MockVectorStore:
 
     async def count(self) -> int:
         return len(self._results)
+
+
+class MockQueryExpander:
+    def __init__(self, sub_queries: list[str] | None = None) -> None:
+        self._sub_queries = sub_queries or []
+        self.called = False
+
+    async def expand(self, query, language) -> list[str]:
+        self.called = True
+        return self._sub_queries
 
 
 class MockRanker:
@@ -257,9 +273,68 @@ async def test_support_intent_returns_out_of_scope_message():
     response = await router.handle("how do I redeem my points")
 
     assert response.response_type == "clarification"
-    assert "help.payback.de" in response.clarification.question
+    assert "payback" in response.clarification.question.lower()
     assert mock_store.search_called is False
     assert mock_clarification.called is False
+
+
+@pytest.mark.asyncio
+async def test_basket_query_triggers_expansion():
+    """is_basket_query=True causes the expander to run and search to be called once per sub-query."""
+    sub_queries = ["pasta dinner", "pasta", "tomato sauce", "olive oil"]
+    intent = _make_intent(
+        specificity=Specificity.specific,
+        confidence=0.9,
+        extracted_query="pasta dinner",
+        is_basket_query=True,
+    )
+    product_a = _sample_product(Partner.edeka)
+    product_b = Product(
+        product_id="test-002", partner=Partner.edeka,
+        name="Tomato Sauce", description="Sauce", category="pantry", price_eur=1.5,
+    )
+    mock_store = MockVectorStore()
+    mock_store._results = [(product_a, 0.8)]
+    mock_expander = MockQueryExpander(sub_queries)
+    router = Router(
+        intent_agent=MockIntentAgent(intent),
+        clarification_agent=MockClarificationAgent(_sample_clarification()),
+        vector_store=mock_store,
+        ranker=MockRanker([_sample_recommendation()]),
+        query_expander=mock_expander,
+    )
+
+    response = await router.handle("pasta dinner")
+
+    assert mock_expander.called is True
+    assert mock_store.search_call_count == len(sub_queries)
+    assert set(mock_store.search_queries) == set(sub_queries)
+    assert response.debug_expanded_queries == sub_queries
+
+
+@pytest.mark.asyncio
+async def test_single_item_query_skips_expansion():
+    """is_basket_query=False: expander is never called, search called exactly once."""
+    intent = _make_intent(
+        specificity=Specificity.specific,
+        confidence=0.9,
+        extracted_query="wireless mouse",
+        is_basket_query=False,
+    )
+    mock_store = MockVectorStore([(_sample_product(), 0.8)])
+    mock_expander = MockQueryExpander(["this", "should", "not", "be", "called"])
+    router = Router(
+        intent_agent=MockIntentAgent(intent),
+        clarification_agent=MockClarificationAgent(_sample_clarification()),
+        vector_store=mock_store,
+        ranker=MockRanker([_sample_recommendation()]),
+        query_expander=mock_expander,
+    )
+
+    await router.handle("wireless mouse")
+
+    assert mock_expander.called is False
+    assert mock_store.search_call_count == 1
 
 
 @pytest.mark.asyncio

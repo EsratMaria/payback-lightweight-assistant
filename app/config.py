@@ -39,5 +39,17 @@ class Settings(BaseSettings):
     )
     clarification_topk: int = Field(default=20, alias="CLARIFICATION_TOPK")
 
+    # Loyalty ranker weights (α, β, γ)
+    loyalty_weight_semantic: float = Field(default=0.6, alias="LOYALTY_WEIGHT_SEMANTIC")
+    loyalty_weight_commercial: float = Field(default=0.3, alias="LOYALTY_WEIGHT_COMMERCIAL")
+    loyalty_weight_diversity: float = Field(default=0.1, alias="LOYALTY_WEIGHT_DIVERSITY")
+
+    # Tuning constants for commercial score
+    points_multiplier_scale: float = Field(default=0.4, alias="POINTS_MULTIPLIER_SCALE")
+    active_promo_bonus: float = Field(default=0.3, alias="ACTIVE_PROMO_BONUS")
+
+    # Tuning constant for user-affinity diversity bonus
+    affinity_diversity_scale: float = Field(default=0.5, alias="AFFINITY_DIVERSITY_SCALE")
+
 
 settings = Settings()
