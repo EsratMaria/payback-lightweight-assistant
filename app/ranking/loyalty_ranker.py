@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from app.models.schemas import Product, ProductRecommendation, UserContext
 
 
@@ -59,21 +61,23 @@ class LoyaltyRanker:
         self.beta = beta
         self.gamma = gamma
 
-    def rank(
+    async def rank(
         self,
         products_with_scores: list[tuple[Product, float]],
-        user_context: UserContext,
+        user_context: Optional[UserContext],
     ) -> list[ProductRecommendation]:
-        """Compute final scores and return a sorted list of ProductRecommendation.
+        """STUB for Step 5. Real loyalty-weighted ranking lands in Step 6.
 
-        Args:
-            products_with_scores: Output from VectorStore.search — list of
-                (Product, cosine_similarity) pairs.
-            user_context: Caller-supplied user context used for diversity weighting.
-
-        Returns:
-            List of ProductRecommendation sorted descending by final_score, with
-            1-based rank assigned after sorting.
+        For now: pass through retrieval results in order, wrap as
+        ProductRecommendation with loyalty_boost=0 and final_score=semantic_score.
         """
-        # TODO: implement scoring formula, partner diversity tracking, and ranking
-        raise NotImplementedError
+        return [
+            ProductRecommendation(
+                product=product,
+                semantic_score=score,
+                loyalty_boost=0.0,
+                final_score=score,
+                rank=i + 1,
+            )
+            for i, (product, score) in enumerate(products_with_scores)
+        ]

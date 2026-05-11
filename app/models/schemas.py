@@ -119,6 +119,11 @@ class ClarifyingQuestion(BaseModel):
     )
 
 
+class AssistRequest(BaseModel):
+    query: str = Field(..., min_length=1, max_length=500)
+    user_context: Optional[UserContext] = None
+
+
 class AssistantResponse(BaseModel):
     """The thing we return from the API."""
     
