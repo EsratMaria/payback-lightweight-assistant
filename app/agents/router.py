@@ -4,10 +4,12 @@ This is the top-level coordinator. It holds no business logic itself: it reads
 the IntentResult produced by the IntentAgent and dispatches to the right branch,
 then assembles the final AssistantResponse.
 
-Branches:
-- navigational  → return navigation_target immediately (no retrieval)
-- specific/high-confidence → retrieve, rank, return recommendations
-- vague/low-confidence/support → retrieve for grounding, generate clarifying question
+Branches (in order):
+  A   navigational + known partner → navigation_target, no retrieval
+  A.5 support → hardcoded out-of-scope message, no retrieval
+  A.6 navigational + no partner → hardcoded "which partner?" question, no retrieval
+  B   specific + high-confidence → retrieve, rank, recommendations
+  C   vague / low-confidence → retrieve for grounding + clarification agent
 """
 from __future__ import annotations
 
@@ -20,7 +22,9 @@ from app.config import settings
 from app.llm.claude_client import ClaudeClient
 from app.models.schemas import (
     AssistantResponse,
+    ClarifyingQuestion,
     Intent,
+    Language,
     Specificity,
     UserContext,
 )
@@ -107,7 +111,81 @@ class Router:
             )
 
         # ------------------------------------------------------------------
-        # Branch B: specific + high-confidence — retrieve and rank
+        # Branch A.5: support intent — out-of-scope, hardcoded honest message.
+        # No retrieval, no second LLM call. The assistant focuses on product
+        # discovery; account/points questions belong in PAYBACK support.
+        # ------------------------------------------------------------------
+        if intent.intent == Intent.support:
+            if intent.language == Language.de:
+                out_of_scope = ClarifyingQuestion(
+                    question=(
+                        "Ich kann dir helfen, Produkte bei dm, EDEKA und Amazon zu finden. "
+                        "Für Fragen zu Punkten, deinem Konto oder Service besuche bitte "
+                        "help.payback.de oder den PAYBACK-Support."
+                    ),
+                    suggested_options=[
+                        "Stattdessen ein Produkt suchen",
+                        "Angebote durchsuchen",
+                        "Zu help.payback.de",
+                    ],
+                )
+            else:
+                out_of_scope = ClarifyingQuestion(
+                    question=(
+                        "I can help you find products across dm, EDEKA, and Amazon — "
+                        "but for points, account, or service questions, please visit "
+                        "help.payback.de or contact PAYBACK support."
+                    ),
+                    suggested_options=[
+                        "Find a product instead",
+                        "Browse deals",
+                        "Go to help.payback.de",
+                    ],
+                )
+            latency_ms = (time.perf_counter() - start) * 1000
+            return AssistantResponse(
+                response_type="clarification",
+                intent_result=intent,
+                clarification=out_of_scope,
+                recommendations=None,
+                navigation_target=None,
+                latency_ms=latency_ms,
+                estimated_cost_eur=estimate_cost(intent_calls=1, clarification_calls=0),
+            )
+
+        # ------------------------------------------------------------------
+        # Branch A.6: navigational without a recognised partner.
+        # Ask the user which of our three partners they want. No retrieval.
+        # ------------------------------------------------------------------
+        if (
+            intent.specificity == Specificity.navigational
+            and intent.target_partner is None
+        ):
+            if intent.language == Language.de:
+                partner_question = ClarifyingQuestion(
+                    question="Welchen Partner möchtest du besuchen?",
+                    suggested_options=["dm", "EDEKA", "Amazon"],
+                )
+            else:
+                partner_question = ClarifyingQuestion(
+                    question="Which partner would you like to visit?",
+                    suggested_options=["dm", "EDEKA", "Amazon"],
+                )
+            latency_ms = (time.perf_counter() - start) * 1000
+            return AssistantResponse(
+                response_type="clarification",
+                intent_result=intent,
+                clarification=partner_question,
+                recommendations=None,
+                navigation_target=None,
+                latency_ms=latency_ms,
+                estimated_cost_eur=estimate_cost(intent_calls=1, clarification_calls=0),
+            )
+
+        # ------------------------------------------------------------------
+        # Branch B: specific + high-confidence — retrieve and rank.
+        # The intent != support guard below is a safety net; A.5 catches
+        # support before this branch is reached.
         # ------------------------------------------------------------------
         if (
             intent.specificity == Specificity.specific
@@ -132,8 +210,8 @@ class Router:
             )
 
         # ------------------------------------------------------------------
-        # Branch C: vague / low-confidence / support / navigational-no-target
-        # Retrieve for grounding, then ask a clarifying question.
+        # Branch C: vague / low-confidence — retrieve for grounding, then
+        # ask a catalog-grounded clarifying question.
         # ------------------------------------------------------------------
         search_query = intent.extracted_query or query
         retrieved = await self.vector_store.search(
@@ -165,7 +243,7 @@ def get_default_router() -> Router:
     llm = ClaudeClient()
     intent_agent = get_default_intent_agent()
     clarification_agent = ClarificationAgent(llm)
-    vector_store = LocalChromaStore(persist_dir=settings.chroma_persist_dir)
+    vector_store = LocalChromaStore(persist_dir=settings.chroma_persist_dir) # changes when swapping with BigQuery
     ranker = LoyaltyRanker()
     return Router(
         intent_agent=intent_agent,

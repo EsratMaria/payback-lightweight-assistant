@@ -238,21 +238,49 @@ async def test_latency_and_cost_populated():
 
 
 @pytest.mark.asyncio
-async def test_support_intent_routes_to_clarification():
+async def test_support_intent_returns_out_of_scope_message():
     intent = _make_intent(
         intent=Intent.support,
         specificity=Specificity.specific,
         confidence=0.97,
+        language=Language.en,
     )
+    mock_store = MockVectorStore()
     mock_clarification = MockClarificationAgent(_sample_clarification())
     router = Router(
         intent_agent=MockIntentAgent(intent),
         clarification_agent=mock_clarification,
-        vector_store=MockVectorStore(),
+        vector_store=mock_store,
         ranker=MockRanker(),
     )
 
     response = await router.handle("how do I redeem my points")
 
     assert response.response_type == "clarification"
-    assert mock_clarification.called is True
+    assert "help.payback.de" in response.clarification.question
+    assert mock_store.search_called is False
+    assert mock_clarification.called is False
+
+
+@pytest.mark.asyncio
+async def test_navigational_without_partner_asks_which_partner():
+    intent = _make_intent(
+        specificity=Specificity.navigational,
+        target_partner=None,
+        language=Language.en,
+    )
+    mock_store = MockVectorStore()
+    mock_clarification = MockClarificationAgent(_sample_clarification())
+    router = Router(
+        intent_agent=MockIntentAgent(intent),
+        clarification_agent=mock_clarification,
+        vector_store=mock_store,
+        ranker=MockRanker(),
+    )
+
+    response = await router.handle("take me to the shop")
+
+    assert response.response_type == "clarification"
+    assert response.clarification.suggested_options == ["dm", "EDEKA", "Amazon"]
+    assert mock_store.search_called is False
+    assert mock_clarification.called is False
