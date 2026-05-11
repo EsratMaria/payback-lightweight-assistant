@@ -152,6 +152,49 @@ def test_german_query():
     assert result.specificity == Specificity.specific
 
 
+def test_partner_mention_in_specific_query():
+    """When the user mentions a recognized partner in a specific query, target_partner is set."""
+    mock = MockLLMClient({
+        "pasta dinner from edeka": _make_intent(
+            intent=Intent.search,
+            specificity=Specificity.specific,
+            language=Language.en,
+            confidence=0.92,
+            target_partner=Partner.edeka,
+            extracted_query="pasta dinner",
+            reasoning="Specific search query with explicit edeka partner mention.",
+        )
+    })
+    agent = IntentAgent(mock)
+    import asyncio
+    result = asyncio.run(agent.classify("pasta dinner from edeka"))
+
+    assert result.intent == Intent.search
+    assert result.specificity == Specificity.specific
+    assert result.target_partner == Partner.edeka
+
+
+def test_unrecognized_partner_falls_through_to_null():
+    """When the user mentions a partner not in our system, target_partner stays null."""
+    mock = MockLLMClient({
+        "pasta from REWE": _make_intent(
+            intent=Intent.search,
+            specificity=Specificity.specific,
+            language=Language.en,
+            confidence=0.88,
+            target_partner=None,
+            extracted_query="pasta",
+            reasoning="REWE is not a supported partner; falling through to search across available partners.",
+        )
+    })
+    agent = IntentAgent(mock)
+    import asyncio
+    result = asyncio.run(agent.classify("pasta from REWE"))
+
+    assert result.target_partner is None
+    assert result.reasoning != ""
+
+
 def test_factory_claude(monkeypatch):
     import app.config
     monkeypatch.setattr(app.config.settings, "default_llm_provider", "claude")

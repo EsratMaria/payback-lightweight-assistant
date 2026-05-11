@@ -1,10 +1,14 @@
 from __future__ import annotations
 
+import logging
+
 import anthropic
 from pydantic import BaseModel, ValidationError
 
 from app.config import settings
 from app.llm.base import LLMClient, LLMError
+
+logger = logging.getLogger(__name__)
 
 _MAX_ATTEMPTS = 2
 
@@ -86,19 +90,33 @@ class ClaudeClient(LLMClient):
                         break
 
                 if tool_input is None:
-                    raise LLMError(
+                    err = LLMError(
                         "Claude returned no tool_use block — structured output failed."
                     )
+                    if attempt < _MAX_ATTEMPTS:
+                        logger.warning(
+                            "Claude returned no tool_use block, retrying. Schema=%s",
+                            schema.__name__,
+                        )
+                    raise err
 
                 return schema.model_validate(tool_input)
 
             except (ValidationError, LLMError) as exc:
                 last_error = exc
                 if attempt < _MAX_ATTEMPTS:
-                    print(
-                        f"[ClaudeClient] attempt {attempt} failed "
-                        f"({type(exc).__name__}: {exc}) — retrying"
-                    )
+                    if isinstance(exc, ValidationError):
+                        logger.warning(
+                            "Claude structured output failed validation, retrying. "
+                            "Schema=%s errors=%s raw_input=%s",
+                            schema.__name__, exc.errors(), tool_input,
+                        )
+                    else:
+                        logger.warning(
+                            "Claude structured output error on attempt %d, retrying. "
+                            "Schema=%s error=%s",
+                            attempt, schema.__name__, exc,
+                        )
 
         raise LLMError(
             f"Claude structured output failed after {_MAX_ATTEMPTS} attempts: {last_error}"

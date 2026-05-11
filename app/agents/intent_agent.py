@@ -2,7 +2,7 @@
 
 Sends the raw user query to the configured LLM and returns an IntentResult.
 The agent's only job is classification — it does not route, clarify, or search.
-Routing decisions live in app/agents/router.py (Step 5).
+Routing decisions live in app/agents/router.py
 """
 from __future__ import annotations
 
@@ -22,8 +22,17 @@ INTENT_SYSTEM_PROMPT = (
     "- EDEKA (grocery: fresh food, dairy, pantry, beverages)\n"
     "- Amazon (long-tail: electronics, home, books, tools, etc.)\n\n"
     "Your job is to classify each user query so the system knows what to do next. "
-    "You MUST respond by calling the `respond` tool with valid IntentResult fields. "
-    "Always provide a brief reasoning trace."
+    "You MUST respond by calling the `respond` tool. "
+    "All enum-valued fields MUST use exactly the values shown in the schema:\n"
+    '- language: "de" or "en"\n'
+    '- intent: "search", "discovery", "comparison", or "support"\n'
+    '- specificity: "specific", "vague", or "navigational"\n'
+    '- target_partner: "dm", "edeka", "amazon", or null. '
+    "If the user mentions a partner that is not one of these three "
+    '(e.g., "REWE", "Lidl", "Aldi"), set target_partner to null and let the search '
+    "span our available partners.\n\n"
+    "Always provide a brief reasoning trace explaining your classification, "
+    "including any signals dropped or assumptions made."
 )
 
 INTENT_USER_PROMPT_TEMPLATE = """Classify the following query.
@@ -41,7 +50,17 @@ Definitions:
     - "specific": query is concrete enough to retrieve useful products (e.g. "pasta dinner", "guenstige Windeln", "wireless mouse under 30 euros").
     - "vague": query is too broad to retrieve useful results (e.g. "something for my dog", "a gift", "etwas Schoenes fuer meinen Mann").
     - "navigational": user explicitly wants a specific partner (e.g. "open Amazon", "EDEKA Angebote", "go to dm shop").
-- target_partner: set ONLY if specificity is "navigational" - one of "dm", "edeka", "amazon". Otherwise null.
+- target_partner: the partner the user explicitly names, if any — one of "dm", "edeka", "amazon", or null.
+    - Set this whenever the user mentions a recognized partner, regardless of intent.
+    - If the user mentions multiple recognized partners, set null and let search span them.
+    - If the user mentions a partner we do NOT support (e.g., REWE, Lidl, Aldi), set null and note in reasoning.
+    - Examples:
+        - "open Amazon for me" → target_partner="amazon", specificity="navigational"
+        - "pasta dinner from edeka" → target_partner="edeka", specificity="specific"
+        - "Windeln bei dm" → target_partner="dm", specificity="specific"
+        - "pasta dinner from dm or edeka" → target_partner=null (multiple recognized partners; let search span both)
+        - "pasta from REWE" → target_partner=null (REWE not in our system; search across our partners)
+        - "shampoo" → target_partner=null (no partner mentioned)
 - extracted_query: a cleaned version of the query suitable for semantic search. Strip filler words; preserve intent. For navigational queries this can be empty.
 - confidence: 0.0-1.0 - how certain you are about the classification. Use lower confidence when the query is borderline.
 - reasoning: ONE short sentence explaining your decision. This is logged for debugging."""

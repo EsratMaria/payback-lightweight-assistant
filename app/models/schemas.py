@@ -37,6 +37,8 @@ class Product(BaseModel):
     description: str = Field(..., description="Product description")
     category: str = Field(..., description="Product category")
     price_eur: float = Field(..., description="Price in EUR", gt=0)
+
+    # Loyalty layer - Considering PAYBACK
     points_multiplier: float = Field(
         default=1.0, description="PAYBACK points multiplier for this product", ge=0
     )
@@ -49,6 +51,7 @@ class Product(BaseModel):
 
 
 class UserContext(BaseModel):
+    """Mocking user profile for loyalty-aware ranking."""
     user_id: Optional[str] = Field(default=None, description="Authenticated user ID")
     partner_affinity: dict[Partner, float] = Field(
         default_factory=lambda: {
@@ -56,14 +59,16 @@ class UserContext(BaseModel):
             Partner.edeka: 0.33,
             Partner.amazon: 0.33,
         },
-        description="Relative affinity scores per partner, should sum to ~1.0",
+        description="Relative affinity scores per partner, should sum to ~1.0 || how often a user shops there..",
     )
     is_new_user: bool = Field(
-        default=True, description="True if the user has no purchase history"
+        default=True, description="True if the user has no purchase history || cold start flag"
     )
 
 
 class IntentResult(BaseModel):
+    """Output of the intent agent — what the LLM tells us about the query."""
+
     language: Language = Field(..., description="Detected language of the query")
     intent: Intent = Field(..., description="Classified intent category")
     specificity: Specificity = Field(..., description="Query specificity level")
@@ -74,7 +79,15 @@ class IntentResult(BaseModel):
         ..., description="Cleaned / normalized query for retrieval"
     )
     target_partner: Optional[Partner] = Field(
-        default=None, description="Explicit partner mentioned in the query, if any"
+        default=None,
+        description=(
+            "The recognized partner the user explicitly mentions, if any. Set when the "
+            "user names one of our supported partners (dm, edeka, amazon) — whether for "
+            "navigation ('open Amazon') or search constraint ('pasta from dm'). The "
+            "router decides what to do with this based on the specificity field. "
+            "Null if no partner is mentioned, if multiple partners are mentioned, or "
+            "if the named partner is not in our system."
+        ),
     )
     reasoning: str = Field(
         ..., description="LLM reasoning trace for the intent classification"
@@ -82,6 +95,8 @@ class IntentResult(BaseModel):
 
 
 class ProductRecommendation(BaseModel):
+    """A scored product result."""
+
     product: Product = Field(..., description="The recommended product")
     semantic_score: float = Field(
         ..., description="Raw cosine similarity from vector search", ge=0.0, le=1.0
@@ -96,6 +111,8 @@ class ProductRecommendation(BaseModel):
 
 
 class ClarifyingQuestion(BaseModel):
+    """When the query is too vague."""
+
     question: str = Field(..., description="The clarifying question to surface to the user")
     suggested_options: list[str] = Field(
         ..., description="Pre-computed answer options to show as quick replies"
@@ -103,6 +120,8 @@ class ClarifyingQuestion(BaseModel):
 
 
 class AssistantResponse(BaseModel):
+    """The thing we return from the API."""
+    
     response_type: Literal["recommendations", "clarification", "navigation"] = Field(
         ..., description="Which action branch was taken"
     )
