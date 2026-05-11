@@ -14,11 +14,11 @@ Takes a user query (EN/DE), classifies intent via LLM, routes to the right actio
 |---|---|
 | API | FastAPI + Pydantic v2 |
 | LLM | Anthropic Claude (primary), Google Gemini (secondary) |
-| Embeddings | sentence-transformers (local, multilingual) |
-| Vector store | ChromaDB (local dev), BigQuery VECTOR_SEARCH (prod) |
+| Embeddings | sentence-transformers `paraphrase-multilingual-MiniLM-L12-v2` (384-dim) |
+| Vector store | ChromaDB with `hnsw:space=cosine` (local dev), BigQuery VECTOR_SEARCH (prod) |
 | Config | pydantic-settings + python-dotenv |
 | Tests | pytest + pytest-asyncio |
-| Runtime | Python 3.11, Cloud Run (prod) |
+| Runtime | Python 3.13, Cloud Run (prod) |
 
 ## Repo layout (key paths)
 
@@ -61,15 +61,15 @@ docs/
 
 ## Implementation sequence
 
-1. Schemas & validation (schemas.py is complete) — write schema tests first.
-2. Catalog generation — run `python data/generate_catalogs.py` once.
-3. Retrieval — implement Embedder → LocalChromaStore → ingest.py.
-4. LLM clients — implement ClaudeClient, then GeminiClient.
-5. Agents — implement intent_agent, clarification, router.
-6. Ranking — implement LoyaltyRanker.
-7. API — wire everything into routes.py, replace stub.
-8. Tests — expand placeholder tests at each step.
-9. Docker — verify Dockerfile builds and container starts.
+1. ✅ Schemas & validation — `schemas.py` complete; all Pydantic v2 models.
+2. ✅ Catalog generation — ~700 products across dm, EDEKA, Amazon via `data/generate_catalogs.py` (Claude Opus 4.5, tool-use forced output, 80% acceptance threshold, exponential backoff).
+3. ✅ Retrieval — `Embedder` (lazy-load, `lru_cache` singleton) → `LocalChromaStore` (ChromaDB cosine, upsert idempotency, `1.0 − distance` clamped similarity) → `ingest.py` (returns `{partner: count}` summary, `--rebuild` flag).
+4. ✅ LLM clients — `ClaudeClient` (tool-use, Pydantic retry, warning logger) complete; `GeminiClient` stub with full implementation sketch.
+5. ✅ Intent agent — `IntentAgent` + `get_default_intent_agent()` factory complete; `target_partner` set on any recognized partner mention, null on unsupported/multiple. `router.py` and `clarification.py` still pending.
+6. ⬜ Ranking — implement `LoyaltyRanker` (α=0.6, β=0.3, γ=0.1).
+7. ⬜ API — wire everything into `routes.py`, replace stub.
+8. ⬜ Tests — expand for router, clarification, ranker, API.
+9. ⬜ Docker — verify Dockerfile builds and container starts.
 
 ## Critical conventions
 
@@ -79,6 +79,8 @@ docs/
 - **Both LLM providers must stay in sync.** Any prompt change must be reflected in both
   `claude_client.py` and `gemini_client.py`.
 - **Config via env only.** Never hardcode API keys, model names, or file paths — use `settings`.
+- **tool-use for structured LLM output.** Always use `tool_choice={"type":"tool","name":"respond"}` — never ask Claude to "reply in JSON". This eliminates markdown wrapping and JSONDecodeError at extraction.
+- **target_partner semantics.** Set whenever a recognized partner (dm, edeka, amazon) is named, regardless of specificity. Null if no partner, multiple partners, or an unsupported partner (REWE, Lidl, etc.) is mentioned. The router, not the agent, decides what to do with it.
 
 ## Key invariants
 
@@ -86,6 +88,9 @@ docs/
 - `LoyaltyRanker` weights must sum awareness: α=0.6, β=0.3, γ=0.1 are defaults — expose them
   as constructor args so tests can override.
 - `generate_catalogs.py` is idempotent: it skips partners whose JSON already exists.
+- ChromaDB cosine distance can slightly exceed 1.0 due to floating-point rounding. Always clamp: `similarity = max(0.0, min(1.0, 1.0 - distance))`.
+- `ClaudeClient` retries once on `ValidationError` or missing `tool_use` block, then raises `LLMError`. All other exceptions (network, auth, rate-limit) propagate to the caller unchanged.
+- Run scripts as modules from repo root: `python -m scripts.try_intent` not `python scripts/try_intent.py`.
 
 ## Local dev commands
 
@@ -96,8 +101,17 @@ uvicorn app.main:app --reload
 # Run all tests
 pytest tests/ -v
 
-# Generate catalogs (needs ANTHROPIC_API_KEY)
+# Run only unit tests (no real API calls)
+pytest tests/ -v -m "not integration"
+
+# Generate catalogs (needs UNIFIED_ENDPOINT_KEY)
 python data/generate_catalogs.py
+
+# Ingest catalogs into ChromaDB (re-ingest from scratch)
+python -m app.retrieval.ingest --rebuild
+
+# Sanity-check intent classification against real Claude
+python -m scripts.try_intent
 
 # Cost estimate
 python scripts/cost_analysis.py --requests-per-day 50000 --provider claude
@@ -109,7 +123,9 @@ python scripts/load_test.py --rps 20 --duration 60
 ## Environment variables (see .env.example)
 
 All loaded via `app/config.py` (pydantic-settings). Key vars:
-- `ANTHROPIC_API_KEY` / `GOOGLE_API_KEY` — LLM keys
+- `UNIFIED_ENDPOINT_BASE_URL_ANTHROPIC` — base URL for the Anthropic unified endpoint
+- `UNIFIED_ENDPOINT_KEY` — API key for the unified endpoint
+- `GOOGLE_API_KEY` — Google Gemini key
 - `DEFAULT_LLM_PROVIDER` — "claude" or "gemini"
 - `VECTOR_STORE` — "local" (ChromaDB) or "bigquery"
 - `CHROMA_PERSIST_DIR` — path for ChromaDB persistence (default `./chroma_db`)
