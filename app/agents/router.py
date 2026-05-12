@@ -13,12 +13,15 @@ Branches (in order):
 """
 from __future__ import annotations
 
+import logging
 import time
 from typing import Optional
 
+logger = logging.getLogger(__name__)
+
 from app.agents.clarification import ClarificationAgent
 from app.agents.intent_agent import IntentAgent, get_default_intent_agent
-from app.agents.query_expander import QueryExpander, get_default_query_expander
+from app.agents.query_expander import QueryExpander
 from app.config import settings
 from app.llm.claude_client import ClaudeClient
 from app.models.schemas import (
@@ -206,23 +209,41 @@ class Router:
             and intent.intent != Intent.support
         ):
             expanded_queries: list[str] | None = None
+            dropped_queries: list[str] | None = None
             did_expand = intent.is_basket_query and self.query_expander is not None
 
             if did_expand:
-                sub_queries = await self.query_expander.expand(
+                expanded = await self.query_expander.expand(
                     intent.extracted_query, intent.language
                 )
+                sub_queries = list(expanded.sub_queries)
                 expanded_queries = sub_queries
+
                 all_results: dict[str, tuple] = {}
+                _dropped: list[str] = []
+
                 for sub_q in sub_queries:
                     results = await self.vector_store.search(
                         sub_q, top_k=8, partner_filter=intent.target_partner
                     )
-                    for product, score in results:
+                    filtered = [
+                        (p, s) for p, s in results
+                        if s >= settings.expansion_min_relevance
+                    ]
+                    if not filtered:
+                        _dropped.append(sub_q)
+                        logger.info(
+                            "Sub-query %r returned no results above threshold (%.2f); dropping.",
+                            sub_q, settings.expansion_min_relevance,
+                        )
+                        continue
+                    for product, score in filtered:
                         existing = all_results.get(product.product_id)
                         if existing is None or existing[1] < score:
                             all_results[product.product_id] = (product, score)
+
                 retrieved = sorted(all_results.values(), key=lambda x: -x[1])[:15]
+                dropped_queries = _dropped if _dropped else None
             else:
                 retrieved = await self.vector_store.search(
                     intent.extracted_query,
@@ -245,6 +266,7 @@ class Router:
                     expansion_calls=1 if did_expand else 0,
                 ),
                 debug_expanded_queries=expanded_queries,
+                debug_dropped_queries=dropped_queries,
             )
 
         # ------------------------------------------------------------------
@@ -277,17 +299,19 @@ class Router:
 
 
 def get_default_router() -> Router:
-    """Wire up the default router using ClaudeClient, LocalChromaStore, and LoyaltyRanker."""
-    llm = ClaudeClient()
-    intent_agent = get_default_intent_agent()
-    clarification_agent = ClarificationAgent(llm)
-    query_expander = get_default_query_expander()
-    vector_store = LocalChromaStore(persist_dir=settings.chroma_persist_dir)  # swap for BigQuery in prod
-    ranker = LoyaltyRanker()
+    """Wire up the default router using ClaudeClient, LocalChromaStore, and LoyaltyRanker.
+
+    The expander and the router share the SAME LocalChromaStore instance so the
+    pre-flight category discovery and per-sub-query retrieval hit the same index.
+    """
+    vector_store = LocalChromaStore(persist_dir=settings.chroma_persist_dir)
     return Router(
-        intent_agent=intent_agent,
-        clarification_agent=clarification_agent,
+        intent_agent=get_default_intent_agent(),
+        clarification_agent=ClarificationAgent(ClaudeClient()),
         vector_store=vector_store,
-        ranker=ranker,
-        query_expander=query_expander,
+        ranker=LoyaltyRanker(),
+        query_expander=QueryExpander(
+            llm=ClaudeClient(),
+            vector_store=vector_store,
+        ),
     )

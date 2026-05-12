@@ -28,7 +28,7 @@ class Embedder:
     @property
     def dim(self) -> int:
         """Embedding dimensionality, derived from the model at first access."""
-        return self.model.get_embedding_dimension()
+        return self.model.get_sentence_embedding_dimension()
 
     def encode(self, texts: list[str], normalize: bool = True) -> np.ndarray:
         """Return a float32 array of shape (len(texts), dim).

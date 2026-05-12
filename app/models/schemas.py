@@ -190,6 +190,14 @@ class AssistantResponse(BaseModel):
             "production deployments should gate this behind a debug flag."
         ),
     )
+    debug_dropped_queries: Optional[list[str]] = Field(
+        default=None,
+        description=(
+            "Sub-queries proposed by the LLM during expansion that were dropped "
+            "because they returned no catalog results above the relevance threshold. "
+            "Surfaced for transparency — production might hide this behind a debug flag."
+        ),
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -45,6 +45,8 @@ class LocalChromaStore(VectorStore):
 
         Category is intentionally excluded — it lives in metadata for
         exact-match filtering, not in the embedding space.
+        is called in add() to build the vectors
+
         """
         return f"{product.name}. {product.description}"
 
@@ -56,14 +58,14 @@ class LocalChromaStore(VectorStore):
         We store promo_text as "" when None and convert back in _from_metadata.
         """
         return {
-            "partner": product.partner.value,
+            "partner": product.partner.value, # stored as string, not enum
             "name": product.name,
             "description": product.description,
-            "category": product.category,
+            "category": product.category, # exact-match filter lives here
             "price_eur": product.price_eur,
             "points_multiplier": product.points_multiplier,
             "active_promo": product.active_promo,
-            "promo_text": product.promo_text or "",
+            "promo_text": product.promo_text or "", # None → "" because ChromaDB rejects None
         }
 
     @staticmethod

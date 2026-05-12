@@ -51,5 +51,9 @@ class Settings(BaseSettings):
     # Tuning constant for user-affinity diversity bonus
     affinity_diversity_scale: float = Field(default=0.5, alias="AFFINITY_DIVERSITY_SCALE")
 
+    # Query expansion: catalog-grounding settings
+    expansion_preflight_topk: int = Field(default=10, alias="EXPANSION_PREFLIGHT_TOPK")
+    expansion_min_relevance: float = Field(default=0.45, alias="EXPANSION_MIN_RELEVANCE")
+
 
 settings = Settings()

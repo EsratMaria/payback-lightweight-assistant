@@ -1,9 +1,7 @@
 """User profile store — resolves user_id to UserContext.
 
 For the demo: backed by data/user_profiles.json.
-In production: would be replaced by a service call (Postgres, gRPC, etc.)
-behind the same UserProfileStore interface. The router and API layer
-depend only on this abstract loader.
+
 """
 from __future__ import annotations
 

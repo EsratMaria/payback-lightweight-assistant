@@ -5,6 +5,7 @@ import pytest
 from app.agents.router import Router, estimate_cost
 from app.models.schemas import (
     ClarifyingQuestion,
+    ExpandedQueries,
     Intent,
     IntentResult,
     Language,
@@ -120,9 +121,9 @@ class MockQueryExpander:
         self._sub_queries = sub_queries or []
         self.called = False
 
-    async def expand(self, query, language) -> list[str]:
+    async def expand(self, query, language) -> ExpandedQueries:
         self.called = True
-        return self._sub_queries
+        return ExpandedQueries(sub_queries=self._sub_queries, reasoning="test")
 
 
 class MockRanker:
@@ -359,3 +360,96 @@ async def test_navigational_without_partner_asks_which_partner():
     assert response.clarification.suggested_options == ["dm", "EDEKA", "Amazon"]
     assert mock_store.search_called is False
     assert mock_clarification.called is False
+
+
+@pytest.mark.asyncio
+async def test_router_drops_low_relevance_subqueries(monkeypatch):
+    """Sub-queries whose results all fall below expansion_min_relevance are dropped."""
+    import app.config as cfg
+    monkeypatch.setattr(cfg.settings, "expansion_min_relevance", 0.45)
+
+    sub_queries = ["pasta dinner", "pasta", "glitter eyeshadow", "olive oil"]
+    intent = _make_intent(
+        specificity=Specificity.specific,
+        confidence=0.9,
+        extracted_query="pasta dinner",
+        is_basket_query=True,
+    )
+
+    product_a = _sample_product(Partner.edeka)
+
+    class MockVectorStorePerQuery:
+        """Returns high-score results for known queries, low-score for the dropped one."""
+        def __init__(self):
+            self.search_queries: list[str] = []
+
+        async def search(self, query, top_k=10, partner_filter=None):
+            self.search_queries.append(query)
+            if query == "glitter eyeshadow":
+                # All results below threshold — should be dropped
+                return [(product_a, 0.2)]
+            return [(product_a, 0.9)]
+
+        async def add(self, products): pass
+        async def count(self): return 1
+
+    mock_store = MockVectorStorePerQuery()
+    mock_expander = MockQueryExpander(sub_queries)
+    router = Router(
+        intent_agent=MockIntentAgent(intent),
+        clarification_agent=MockClarificationAgent(_sample_clarification()),
+        vector_store=mock_store,
+        ranker=MockRanker([_sample_recommendation()]),
+        query_expander=mock_expander,
+    )
+
+    response = await router.handle("pasta dinner")
+
+    assert response.response_type == "recommendations"
+    assert response.debug_dropped_queries == ["glitter eyeshadow"]
+    # All 4 sub-queries were searched, but only 1 dropped
+    assert "glitter eyeshadow" in mock_store.search_queries
+
+
+@pytest.mark.asyncio
+async def test_router_preserves_subquery_metadata(monkeypatch):
+    """debug_expanded_queries contains all proposed queries; debug_dropped_queries the dropped subset."""
+    import app.config as cfg
+    monkeypatch.setattr(cfg.settings, "expansion_min_relevance", 0.45)
+
+    sub_queries = ["pasta dinner", "pasta", "setting spray", "olive oil"]
+    intent = _make_intent(
+        specificity=Specificity.specific,
+        confidence=0.9,
+        extracted_query="pasta dinner",
+        is_basket_query=True,
+    )
+
+    product_a = _sample_product(Partner.edeka)
+
+    class MockVectorStoreFiltered:
+        async def search(self, query, top_k=10, partner_filter=None):
+            if query == "setting spray":
+                return [(product_a, 0.1)]  # below threshold
+            return [(product_a, 0.8)]      # above threshold
+
+        async def add(self, products): pass
+        async def count(self): return 1
+
+    mock_expander = MockQueryExpander(sub_queries)
+    router = Router(
+        intent_agent=MockIntentAgent(intent),
+        clarification_agent=MockClarificationAgent(_sample_clarification()),
+        vector_store=MockVectorStoreFiltered(),
+        ranker=MockRanker([_sample_recommendation()]),
+        query_expander=mock_expander,
+    )
+
+    response = await router.handle("pasta dinner")
+
+    # All proposed queries are surfaced
+    assert set(response.debug_expanded_queries) == set(sub_queries)
+    # Only the below-threshold one is in dropped
+    assert response.debug_dropped_queries == ["setting spray"]
+    # Dropped is a strict subset of expanded
+    assert set(response.debug_dropped_queries).issubset(set(response.debug_expanded_queries))
