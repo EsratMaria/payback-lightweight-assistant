@@ -1,0 +1,224 @@
+- query: "wireless mouse"
+  expected:
+    language: en
+    intent: search
+    specificity: specific
+    is_basket_query: false
+    target_partner: null
+  notes: "single item English, no partner"
+
+- query: "Schokolade"
+  expected:
+    language: de
+    intent: search
+    specificity: specific
+    is_basket_query: false
+    target_partner: null
+  notes: "single-word German, no partner"
+
+- query: "USB-C charger"
+  expected:
+    language: en
+    intent: search
+    specificity: specific
+    is_basket_query: false
+    target_partner: null
+  notes: "single item English tech, no partner"
+
+- query: "günstige Windeln"
+  expected:
+    language: de
+    intent: search
+    specificity: specific
+    is_basket_query: false
+    target_partner: null
+  notes: "single item German with adjective, dm category"
+
+- query: "stuff for a pasta dinner"
+  expected:
+    language: en
+    intent: search
+    specificity: specific
+    is_basket_query: true
+    target_partner: null
+  notes: "basket query English, multi-item meal"
+
+- query: "ingredients for tiramisu"
+  expected:
+    language: en
+    intent: search
+    specificity: specific
+    is_basket_query: true
+    target_partner: null
+  notes: "basket query English recipe"
+
+- query: "birthday party snacks"
+  expected:
+    language: en
+    intent: search
+    specificity: specific
+    is_basket_query: true
+    target_partner: null
+  notes: "basket English, event-based"
+
+- query: "things I need for a BBQ"
+  expected:
+    language: en
+    intent: search
+    specificity: specific
+    is_basket_query: true
+    target_partner: null
+  notes: "basket English, event-based"
+
+- query: "Bio-Milch"
+  expected:
+    language: de
+    intent: search
+    specificity: specific
+    is_basket_query: false
+    target_partner: null
+  notes: "single item German grocery"
+
+- query: "Naturshampoo ohne Sulfate"
+  expected:
+    language: de
+    intent: search
+    specificity: specific
+    is_basket_query: false
+    target_partner: null
+  notes: "specific German cosmetics query"
+
+- query: "günstige Kopfhörer unter 50 Euro"
+  expected:
+    language: de
+    intent: search
+    specificity: specific
+    is_basket_query: false
+    target_partner: null
+  notes: "specific German with price constraint"
+
+- query: "Babynahrung Brei Stufe 1"
+  expected:
+    language: de
+    intent: search
+    specificity: specific
+    is_basket_query: false
+    target_partner: null
+  notes: "specific German baby product"
+
+- query: "Geburtstagsparty Snacks"
+  expected:
+    language: de
+    intent: search
+    specificity: specific
+    is_basket_query: true
+    target_partner: null
+  notes: "basket German, event-based"
+
+- query: "alles für ein Wochenende am See"
+  expected:
+    language: de
+    intent: search
+    specificity: specific
+    is_basket_query: true
+    target_partner: null
+  notes: "basket German, lifestyle scenario"
+
+- query: "Zutaten für Lasagne"
+  expected:
+    language: de
+    intent: search
+    specificity: specific
+    is_basket_query: true
+    target_partner: null
+  notes: "basket German recipe"
+
+- query: "Morgenroutine Pflege"
+  expected:
+    language: de
+    intent: search
+    specificity: specific
+    is_basket_query: true
+    target_partner: null
+  notes: "basket German, beauty regimen"
+
+- query: "something for my dog"
+  expected:
+    language: en
+    intent: search
+    specificity: vague
+    is_basket_query: false
+    target_partner: null
+  notes: "vague English, no specific product"
+
+- query: "etwas Schönes für meinen Mann"
+  expected:
+    language: de
+    intent: search
+    specificity: vague
+    is_basket_query: false
+    target_partner: null
+  notes: "vague German gift idea"
+
+- query: "open Amazon for me"
+  expected:
+    language: en
+    intent: search
+    specificity: navigational
+    is_basket_query: false
+    target_partner: amazon
+  notes: "navigational English with partner"
+
+- query: "geh zu dm"
+  expected:
+    language: de
+    intent: search
+    specificity: navigational
+    is_basket_query: false
+    target_partner: dm
+  notes: "navigational German with partner"
+
+- query: "take me to the shop"
+  expected:
+    language: en
+    intent: search
+    specificity: navigational
+    is_basket_query: false
+    target_partner: null
+  notes: "navigational without partner"
+
+- query: "how do I redeem my points"
+  expected:
+    language: en
+    intent: support
+    specificity: specific
+    is_basket_query: false
+    target_partner: null
+  notes: "support English, out-of-scope"
+
+- query: "wo finde ich meinen Punktestand"
+  expected:
+    language: de
+    intent: support
+    specificity: specific
+    is_basket_query: false
+    target_partner: null
+  notes: "support German, out-of-scope"
+
+- query: "pasta dinner from edeka"
+  expected:
+    language: en
+    intent: search
+    specificity: specific
+    is_basket_query: true
+    target_partner: edeka
+  notes: "basket English with partner constraint"
+
+- query: "Windeln bei dm"
+  expected:
+    language: de
+    intent: search
+    specificity: specific
+    is_basket_query: false
+    target_partner: dm
+  notes: "single item German with partner"

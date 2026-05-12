@@ -176,3 +176,55 @@ class AssistantResponse(BaseModel):
             "production deployments should gate this behind a debug flag."
         ),
     )
+
+
+# ---------------------------------------------------------------------------
+# Eval schemas — used by evals/ runners only, not part of the production API
+# ---------------------------------------------------------------------------
+
+
+class JudgmentScore(BaseModel):
+    """Single judge scoring run for one query response."""
+
+    query_satisfaction: int = Field(
+        ge=0, le=3,
+        description="Did the response address what the user asked? 0=completely off, 3=fully satisfying",
+    )
+    result_quality: int = Field(
+        ge=0, le=3,
+        description="Are recommendations/clarification appropriate and grounded? 0=completely off, 3=fully satisfying",
+    )
+    language_tone_match: int = Field(
+        ge=0, le=3,
+        description="Did the response match the user's language? 0=wrong language, 3=perfect match",
+    )
+    reasoning: str = Field(
+        description="One sentence per dimension explaining the score."
+    )
+
+
+class QueryJudgment(BaseModel):
+    """Aggregated judge result for a single query across 3 runs."""
+
+    query: str
+    response_type: str
+    runs: list[JudgmentScore]
+    median_query_satisfaction: int
+    median_result_quality: int
+    median_language_tone: int
+    total_median: int
+    variance_flag: bool
+
+
+class E2EEvalResult(BaseModel):
+    """Full E2E eval result across all queries."""
+
+    total_queries: int
+    mean_total: float
+    mean_query_satisfaction: float
+    mean_result_quality: float
+    mean_language_tone: float
+    high_variance_queries: list[str]
+    per_query: list[QueryJudgment]
+    judge_human_agreement: dict | None = None
+    duration_seconds: float

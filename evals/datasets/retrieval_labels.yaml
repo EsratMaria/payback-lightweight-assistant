@@ -1,0 +1,147 @@
+- query: "Spaghetti"
+  relevant_product_ids:
+    - "edeka-0008"
+    - "edeka-0048"
+    - "edeka-0064"
+    - "edeka-0098"
+    - "edeka-0114"
+    - "edeka-0146"
+    - "edeka-0169"
+  notes: "German single-noun, should surface EDEKA spaghetti products"
+
+- query: "Windeln"
+  relevant_product_ids:
+    - "dm-0003"
+    - "dm-0014"
+    - "dm-0027"
+    - "dm-0039"
+    - "dm-0052"
+    - "dm-0057"
+    - "dm-0078"
+  notes: "German single-noun, should surface dm diaper products"
+
+- query: "Shampoo"
+  relevant_product_ids:
+    - "dm-0020"
+    - "dm-0026"
+    - "dm-0059"
+    - "dm-0140"
+    - "dm-0176"
+  notes: "German single-noun, should surface dm shampoo products"
+
+- query: "diapers"
+  relevant_product_ids:
+    - "dm-0003"
+    - "dm-0014"
+    - "dm-0027"
+    - "dm-0039"
+    - "dm-0052"
+    - "dm-0078"
+  notes: "English single-noun, cross-lingual, should surface dm diaper products"
+
+- query: "yogurt"
+  relevant_product_ids:
+    - "edeka-0010"
+    - "edeka-0017"
+    - "edeka-0059"
+    - "edeka-0078"
+    - "edeka-0128"
+    - "edeka-0158"
+  notes: "English single-noun, should surface EDEKA joghurt products"
+
+- query: "keyboard"
+  relevant_product_ids:
+    - "amazon-0024"
+    - "amazon-0049"
+    - "amazon-0144"
+    - "amazon-0168"
+    - "amazon-0269"
+  notes: "English single-noun, should surface Amazon keyboard products"
+
+- query: "Bio Milch"
+  relevant_product_ids:
+    - "edeka-0001"
+    - "edeka-0026"
+    - "edeka-0051"
+    - "edeka-0076"
+    - "edeka-0101"
+    - "edeka-0126"
+    - "edeka-0151"
+  notes: "German multi-word, organic milk from EDEKA"
+
+- query: "wireless mouse"
+  relevant_product_ids:
+    - "amazon-0002"
+    - "amazon-0027"
+    - "amazon-0052"
+    - "amazon-0077"
+    - "amazon-0102"
+    - "amazon-0127"
+    - "amazon-0152"
+  notes: "English multi-word, Amazon electronics"
+
+- query: "Tomatensauce"
+  relevant_product_ids:
+    - "edeka-0022"
+    - "edeka-0069"
+    - "edeka-0124"
+    - "edeka-0149"
+    - "edeka-0174"
+  notes: "German multi-word, tomato-based products from EDEKA"
+
+- query: "Barilla"
+  relevant_product_ids:
+    - "edeka-0008"
+    - "edeka-0048"
+    - "edeka-0064"
+    - "edeka-0098"
+    - "edeka-0146"
+  notes: "Brand name query, should surface Barilla pasta from EDEKA"
+
+- query: "Nivea"
+  relevant_product_ids:
+    - "dm-0002"
+    - "dm-0016"
+    - "dm-0032"
+    - "dm-0046"
+    - "dm-0054"
+    - "dm-0066"
+    - "dm-0077"
+  notes: "Brand name query, should surface Nivea products from dm"
+
+- query: "Logitech"
+  relevant_product_ids:
+    - "amazon-0002"
+    - "amazon-0024"
+    - "amazon-0027"
+    - "amazon-0049"
+    - "amazon-0052"
+    - "amazon-0195"
+  notes: "Brand name query, Logitech products from Amazon"
+
+- query: "pasta"
+  relevant_product_ids:
+    - "edeka-0008"
+    - "edeka-0048"
+    - "edeka-0064"
+    - "edeka-0098"
+    - "edeka-0114"
+    - "edeka-0146"
+  notes: "Cross-lingual: English query, German EDEKA pasta products"
+
+- query: "Kopfhörer"
+  relevant_product_ids:
+    - "amazon-0073"
+    - "amazon-0093"
+    - "amazon-0218"
+  notes: "Cross-lingual: German query, Amazon headphone products"
+
+- query: "moisturizer"
+  relevant_product_ids:
+    - "dm-0001"
+    - "dm-0002"
+    - "dm-0024"
+    - "dm-0051"
+    - "dm-0126"
+    - "dm-0138"
+  notes: "Cross-lingual: English query, dm German skin care products"

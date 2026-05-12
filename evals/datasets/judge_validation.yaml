@@ -1,0 +1,69 @@
+- query: "stuff for a pasta dinner"
+  expected_response_type: recommendations
+  human_rating_query_satisfaction: null
+  human_rating_result_quality: null
+  human_rating_language_tone: null
+  notes: "Basket query, should recommend pasta ingredients"
+
+- query: "ingredients for tiramisu"
+  expected_response_type: recommendations
+  human_rating_query_satisfaction: null
+  human_rating_result_quality: null
+  human_rating_language_tone: null
+  notes: "Basket query German dessert"
+
+- query: "wireless mouse"
+  expected_response_type: recommendations
+  human_rating_query_satisfaction: null
+  human_rating_result_quality: null
+  human_rating_language_tone: null
+  notes: "Single item, Amazon electronics"
+
+- query: "Products for glowing skin from dm"
+  expected_response_type: recommendations
+  human_rating_query_satisfaction: null
+  human_rating_result_quality: null
+  human_rating_language_tone: null
+  notes: "Specific query with partner filter"
+
+- query: "something for my dog"
+  expected_response_type: clarification
+  human_rating_query_satisfaction: null
+  human_rating_result_quality: null
+  human_rating_language_tone: null
+  notes: "Vague query, should ask clarifying question"
+
+- query: "etwas Schönes für meinen Mann"
+  expected_response_type: clarification
+  human_rating_query_satisfaction: null
+  human_rating_result_quality: null
+  human_rating_language_tone: null
+  notes: "Vague German gift query"
+
+- query: "alles für ein Wochenende am See"
+  expected_response_type: recommendations
+  human_rating_query_satisfaction: null
+  human_rating_result_quality: null
+  human_rating_language_tone: null
+  notes: "Basket German lifestyle scenario"
+
+- query: "open Amazon for me"
+  expected_response_type: navigation
+  human_rating_query_satisfaction: null
+  human_rating_result_quality: null
+  human_rating_language_tone: null
+  notes: "Navigational with partner"
+
+- query: "take me to the shop"
+  expected_response_type: clarification
+  human_rating_query_satisfaction: null
+  human_rating_result_quality: null
+  human_rating_language_tone: null
+  notes: "Navigational without partner, should ask which partner"
+
+- query: "how do I redeem my points"
+  expected_response_type: clarification
+  human_rating_query_satisfaction: null
+  human_rating_result_quality: null
+  human_rating_language_tone: null
+  notes: "Support intent, out-of-scope hardcoded response"

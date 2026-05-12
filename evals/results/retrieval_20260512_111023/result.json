@@ -1,0 +1,287 @@
+{
+  "total_queries": 15,
+  "mean_precision_at_5": 0.36,
+  "mean_recall_at_5": 0.3358730158730159,
+  "per_query": [
+    {
+      "query": "Spaghetti",
+      "precision_at_5": 0.8,
+      "recall_at_5": 0.5714285714285714,
+      "retrieved_ids": [
+        "edeka-0169",
+        "edeka-0146",
+        "dm-0022",
+        "edeka-0114",
+        "edeka-0048"
+      ],
+      "missed_ids": [
+        "edeka-0008",
+        "edeka-0064",
+        "edeka-0098"
+      ],
+      "notes": "German single-noun, should surface EDEKA spaghetti products"
+    },
+    {
+      "query": "Windeln",
+      "precision_at_5": 0.4,
+      "recall_at_5": 0.2857142857142857,
+      "retrieved_ids": [
+        "dm-0014",
+        "dm-0183",
+        "dm-0057",
+        "dm-0103",
+        "edeka-0191"
+      ],
+      "missed_ids": [
+        "dm-0003",
+        "dm-0052",
+        "dm-0078",
+        "dm-0039",
+        "dm-0027"
+      ],
+      "notes": "German single-noun, should surface dm diaper products"
+    },
+    {
+      "query": "Shampoo",
+      "precision_at_5": 1.0,
+      "recall_at_5": 1.0,
+      "retrieved_ids": [
+        "dm-0020",
+        "dm-0140",
+        "dm-0026",
+        "dm-0176",
+        "dm-0059"
+      ],
+      "missed_ids": [],
+      "notes": "German single-noun, should surface dm shampoo products"
+    },
+    {
+      "query": "diapers",
+      "precision_at_5": 0.0,
+      "recall_at_5": 0.0,
+      "retrieved_ids": [
+        "dm-0090",
+        "dm-0095",
+        "dm-0117",
+        "dm-0139",
+        "dm-0174"
+      ],
+      "missed_ids": [
+        "dm-0003",
+        "dm-0052",
+        "dm-0078",
+        "dm-0039",
+        "dm-0014"
+      ],
+      "notes": "English single-noun, cross-lingual, should surface dm diaper products"
+    },
+    {
+      "query": "yogurt",
+      "precision_at_5": 0.0,
+      "recall_at_5": 0.0,
+      "retrieved_ids": [
+        "edeka-0066",
+        "edeka-0024",
+        "edeka-0018",
+        "dm-0082",
+        "dm-0068"
+      ],
+      "missed_ids": [
+        "edeka-0078",
+        "edeka-0010",
+        "edeka-0128",
+        "edeka-0017",
+        "edeka-0158"
+      ],
+      "notes": "English single-noun, should surface EDEKA joghurt products"
+    },
+    {
+      "query": "keyboard",
+      "precision_at_5": 0.8,
+      "recall_at_5": 0.8,
+      "retrieved_ids": [
+        "amazon-0269",
+        "amazon-0024",
+        "amazon-0168",
+        "amazon-0144",
+        "amazon-0212"
+      ],
+      "missed_ids": [
+        "amazon-0049"
+      ],
+      "notes": "English single-noun, should surface Amazon keyboard products"
+    },
+    {
+      "query": "Bio Milch",
+      "precision_at_5": 0.0,
+      "recall_at_5": 0.0,
+      "retrieved_ids": [
+        "dm-0156",
+        "dm-0088",
+        "edeka-0180",
+        "dm-0068",
+        "dm-0137"
+      ],
+      "missed_ids": [
+        "edeka-0026",
+        "edeka-0051",
+        "edeka-0001",
+        "edeka-0126",
+        "edeka-0101"
+      ],
+      "notes": "German multi-word, organic milk from EDEKA"
+    },
+    {
+      "query": "wireless mouse",
+      "precision_at_5": 0.4,
+      "recall_at_5": 0.2857142857142857,
+      "retrieved_ids": [
+        "amazon-0027",
+        "amazon-0277",
+        "amazon-0227",
+        "amazon-0252",
+        "amazon-0077"
+      ],
+      "missed_ids": [
+        "amazon-0052",
+        "amazon-0127",
+        "amazon-0002",
+        "amazon-0152",
+        "amazon-0102"
+      ],
+      "notes": "English multi-word, Amazon electronics"
+    },
+    {
+      "query": "Tomatensauce",
+      "precision_at_5": 0.0,
+      "recall_at_5": 0.0,
+      "retrieved_ids": [
+        "edeka-0118",
+        "edeka-0030",
+        "edeka-0131",
+        "edeka-0016",
+        "edeka-0081"
+      ],
+      "missed_ids": [
+        "edeka-0069",
+        "edeka-0174",
+        "edeka-0022",
+        "edeka-0149",
+        "edeka-0124"
+      ],
+      "notes": "German multi-word, tomato-based products from EDEKA"
+    },
+    {
+      "query": "Barilla",
+      "precision_at_5": 0.0,
+      "recall_at_5": 0.0,
+      "retrieved_ids": [
+        "dm-0174",
+        "edeka-0172",
+        "edeka-0187",
+        "edeka-0097",
+        "edeka-0054"
+      ],
+      "missed_ids": [
+        "edeka-0008",
+        "edeka-0146",
+        "edeka-0048",
+        "edeka-0064",
+        "edeka-0098"
+      ],
+      "notes": "Brand name query, should surface Barilla pasta from EDEKA"
+    },
+    {
+      "query": "Nivea",
+      "precision_at_5": 0.6,
+      "recall_at_5": 0.42857142857142855,
+      "retrieved_ids": [
+        "dm-0046",
+        "dm-0182",
+        "dm-0002",
+        "dm-0016",
+        "dm-0095"
+      ],
+      "missed_ids": [
+        "dm-0066",
+        "dm-0054",
+        "dm-0077",
+        "dm-0032"
+      ],
+      "notes": "Brand name query, should surface Nivea products from dm"
+    },
+    {
+      "query": "Logitech",
+      "precision_at_5": 0.2,
+      "recall_at_5": 0.16666666666666666,
+      "retrieved_ids": [
+        "amazon-0077",
+        "amazon-0002",
+        "amazon-0227",
+        "amazon-0127",
+        "amazon-0152"
+      ],
+      "missed_ids": [
+        "amazon-0052",
+        "amazon-0049",
+        "amazon-0195",
+        "amazon-0027",
+        "amazon-0024"
+      ],
+      "notes": "Brand name query, Logitech products from Amazon"
+    },
+    {
+      "query": "pasta",
+      "precision_at_5": 0.6,
+      "recall_at_5": 0.5,
+      "retrieved_ids": [
+        "edeka-0048",
+        "edeka-0098",
+        "edeka-0169",
+        "edeka-0190",
+        "edeka-0146"
+      ],
+      "missed_ids": [
+        "edeka-0008",
+        "edeka-0114",
+        "edeka-0064"
+      ],
+      "notes": "Cross-lingual: English query, German EDEKA pasta products"
+    },
+    {
+      "query": "Kopfhörer",
+      "precision_at_5": 0.6,
+      "recall_at_5": 1.0,
+      "retrieved_ids": [
+        "amazon-0218",
+        "amazon-0093",
+        "amazon-0073",
+        "amazon-0168",
+        "amazon-0269"
+      ],
+      "missed_ids": [],
+      "notes": "Cross-lingual: German query, Amazon headphone products"
+    },
+    {
+      "query": "moisturizer",
+      "precision_at_5": 0.0,
+      "recall_at_5": 0.0,
+      "retrieved_ids": [
+        "dm-0128",
+        "dm-0065",
+        "dm-0192",
+        "dm-0011",
+        "dm-0004"
+      ],
+      "missed_ids": [
+        "dm-0138",
+        "dm-0002",
+        "dm-0001",
+        "dm-0051",
+        "dm-0024"
+      ],
+      "notes": "Cross-lingual: English query, dm German skin care products"
+    }
+  ],
+  "duration_seconds": 9.940371999982744
+}
