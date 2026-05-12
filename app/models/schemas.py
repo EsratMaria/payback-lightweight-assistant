@@ -143,8 +143,22 @@ class ClarifyingQuestion(BaseModel):
 
 
 class AssistRequest(BaseModel):
-    query: str = Field(..., min_length=1, max_length=500)
-    user_context: Optional[UserContext] = None
+    query: str = Field(
+        ...,
+        min_length=1,
+        max_length=500,
+        description="The user's natural-language query in English or German.",
+        examples=["I need stuff for a pasta dinner", "Bitte zeige mir günstige Windeln"],
+    )
+    user_id: Optional[str] = Field(
+        default=None,
+        description=(
+            "Optional user identifier. If provided, the server resolves it to a "
+            "UserContext via the user-profiles store. If absent or unknown, the "
+            "request is treated as a cold-start (no personalization)."
+        ),
+        examples=["user_edeka_heavy"],
+    )
 
 
 class AssistantResponse(BaseModel):
