@@ -66,15 +66,25 @@ docs/
 
 ## Implementation sequence
 
-1. ✅ Schemas & validation — `schemas.py` complete; all Pydantic v2 models.
-2. ✅ Catalog generation — ~700 products across dm, EDEKA, Amazon via `data/generate_catalogs.py` (Claude Opus 4.5, tool-use forced output, 80% acceptance threshold, exponential backoff).
-3. ✅ Retrieval — `Embedder` (lazy-load, `lru_cache` singleton) → `LocalChromaStore` (ChromaDB cosine, upsert idempotency, `1.0 − distance` clamped similarity) → `ingest.py` (returns `{partner: count}` summary, `--rebuild` flag).
-4. ✅ LLM clients — `ClaudeClient` (tool-use, Pydantic retry, warning logger) complete; `LLMClient` interface ready for additional providers via dependency injection.
-5. ✅ Intent agent — `IntentAgent` + `get_default_intent_agent()` factory complete; `target_partner` set on any recognized partner mention, null on unsupported/multiple. `router.py` and `clarification.py` still pending.
-6. ⬜ Ranking — implement `LoyaltyRanker` (α=0.6, β=0.3, γ=0.1).
-7. ⬜ API — wire everything into `routes.py`, replace stub.
-8. ⬜ Tests — expand for router, clarification, ranker, API.
-9. ⬜ Docker — verify Dockerfile builds and container starts.
+All steps complete.
+
+1. ✅ Schemas & validation — `schemas.py`; all Pydantic v2 models including `prefers_deals` and `promo_fallback`.
+2. ✅ Catalog generation — ~700 products across dm, EDEKA, Amazon via `data/generate_catalogs.py` (Claude Haiku, tool-use forced output, 80% acceptance threshold, exponential backoff).
+3. ✅ Retrieval — `Embedder` (lazy-load, `lru_cache` singleton) → `LocalChromaStore` (ChromaDB cosine, upsert idempotency, `1.0 − distance` clamped, `partner_filter` + `promo_only` where-clause) → `BigQueryVectorStore` stub → `ingest.py`.
+4. ✅ LLM clients — `ClaudeClient` (tool-use, Pydantic retry, warning logger); `LLMClient` ABC for provider extensibility.
+5. ✅ Intent agent — `IntentAgent` classifies 7 fields: `language`, `intent`, `specificity`, `confidence`, `extracted_query`, `target_partner`, `is_basket_query`, `prefers_deals`.
+6. ✅ Router — 5-branch orchestrator: navigational+partner, support, navigational-no-partner, specific+high-confidence (with basket expansion + promo filter), vague/low-confidence. Returns `latency_ms`, `estimated_cost_eur`.
+7. ✅ Clarification agent — `ClarificationAgent` generates catalog-grounded clarifying questions.
+8. ✅ Query expander — `QueryExpander` does pre-flight retrieval for category discovery, then LLM generates 3-5 sub-queries constrained to available categories; per-sub relevance filter (threshold=0.45); `debug_dropped_queries` surfaced in response.
+9. ✅ Loyalty ranker — `LoyaltyRanker` with configurable α=0.6/β=0.3/γ=0.1; cold-start diversity from result-set partner distribution.
+10. ✅ Deal-seeking filter — `prefers_deals` intent signal; `promo_only=True` passed to vector store; graceful fallback with `promo_fallback=True` in response.
+11. ✅ API — `POST /assist`, `GET /health`, `GET /users`, `GET /users/{id}`, `GET /partners`, `GET /stats`; Swagger UI at `/docs`.
+12. ✅ Evaluation infrastructure — `evals/run_intent_eval.py` (accuracy + confusion matrix), `evals/run_retrieval_eval.py` (P@5, R@5), `evals/run_e2e_eval.py` (Opus judge, 3-run median, judge-human agreement).
+13. ✅ Tests — 57 unit tests across retrieval, router, ranker, intent, query expander, API, and eval math.
+14. ✅ Demo notebook — `notebooks/demo.ipynb` (20 cells, 7 query types, live output, verdict section).
+15. ✅ Docker — multi-stage Dockerfile (builder + runtime); CPU-only torch via `--index-url https://download.pytorch.org/whl/cpu`; non-root `appuser`; HEALTHCHECK; `${PORT:-8080}`.
+16. ✅ Cloud Run deployment — `scripts/deploy.sh` (Secret Manager setup, API enablement, Cloud Build deploy, health check); `scripts/deploy.README.md` (prerequisites, rotation, teardown, cost).
+17. ✅ ADRs — 17 Architecture Decision Records in `docs/decisions.md`.
 
 ## Critical conventions
 
@@ -85,6 +95,8 @@ docs/
 - **Config via env only.** Never hardcode API keys, model names, or file paths — use `settings`.
 - **tool-use for structured LLM output.** Always use `tool_choice={"type":"tool","name":"respond"}` — never ask Claude to "reply in JSON". This eliminates markdown wrapping and JSONDecodeError at extraction.
 - **target_partner semantics.** Set whenever a recognized partner (dm, edeka, amazon) is named, regardless of specificity. Null if no partner, multiple partners, or an unsupported partner (REWE, Lidl, etc.) is mentioned. The router, not the agent, decides what to do with it.
+- **prefers_deals semantics.** Set by the intent agent on explicit deal signals ("günstig", "Angebot", "cheap", "sale"). The router passes `promo_only=True` to the vector store; if that yields no results, it retries unfiltered and sets `promo_fallback=True` in the response. Never hard-fail on empty promo results — always fall back.
+- **promo_only filter.** Implemented as a ChromaDB `where` clause on `active_promo=True`, combined with `partner_filter` via `$and` when both are set. BigQuery stub accepts the parameter but raises `NotImplementedError`.
 
 ## Key invariants
 
@@ -116,6 +128,9 @@ python -m app.retrieval.ingest --rebuild
 
 # Sanity-check intent classification against real Claude
 python -m scripts.try_intent
+
+# End-to-end router sanity check (runs 3 deal-seeking queries by default)
+python -m scripts.try_router
 
 # Cost estimate
 python scripts/cost_analysis.py --requests-per-day 50000 --provider claude
