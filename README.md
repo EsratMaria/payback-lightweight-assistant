@@ -25,54 +25,17 @@ loyalty-aware scoring function, and returns structured JSON.
 | 12 | Evaluation infrastructure — intent eval, retrieval P@5/R@5, E2E LLM-as-judge | Done |
 | 13 | Tests — 57 unit tests across all layers | Done |
 | 14 | Demo notebook — 20 cells, 7 query types, live output | Done |
-| 15 | Docker — multi-stage image, CPU-only torch, non-root user | Done |
-| 16 | Cloud Run deployment — deploy.sh, Secret Manager, deploy.README.md | Done |
+| 15 | Docker — multi-stage image, CPU-only torch, non-root user (experimental) | Done |
+| 16 | Cloud Run deployment — deploy.sh, Secret Manager, deploy.README.md (locally) | Done |
 | 17 | Architecture Decision Records — 17 ADRs in docs/decisions.md | Done |
 
 ---
 
-## Architecture
+## Architecture Diagram
 
-```
-User query (EN/DE)
-       │
-       ▼
-  IntentAgent  ──────────────────────────────────────────────────────────
-  (Claude)                                                              │
-  • language, intent, specificity, confidence                          │
-  • target_partner, is_basket_query, prefers_deals                     │
-       │                                                               │
-       ▼                                                               │
-    Router  ─────────────────────────────────────────────────────┐    │
-  5 branches:                                                     │    │
-  A   navigational + partner  → navigation_target                 │    │
-  A.5 support                 → out-of-scope message              │    │
-  A.6 navigational, no partner→ partner clarification             │    │
-  B   specific + confident    → retrieve → rank → recommendations │    │
-  C   vague / low-confidence  → retrieve for grounding → clarify  │    │
-       │                                                               │
-  [Branch B]                                                           │
-       │                                                               │
-  is_basket? ──yes──▶ QueryExpander (Claude)                          │
-       │                pre-flight retrieval → category discovery     │
-       │                LLM generates 3-5 sub-queries                 │
-       │                per-sub relevance filter (≥0.45)              │
-       │                dropped queries surfaced in response           │
-       │◀──no──────────────────────────────────────────────────────────
-       │
-  prefers_deals? ──yes──▶ VectorStore.search(promo_only=True)
-       │                   ──empty?──▶ fallback + promo_fallback=True
-       │◀──no────────────────────────────────────────────────────────
-       │
-  LocalChromaStore  (cosine similarity, partner + promo filters)
-  paraphrase-multilingual-MiniLM-L12-v2  (384-dim, EN+DE)
-       │
-  LoyaltyRanker
-  final = 0.6·semantic + 0.3·commercial + 0.1·diversity
-  cold-start: diversity_bonus from result-set partner distribution
-       │
-  AssistantResponse (JSON)
-```
+![Architecture Indexing Diagram](docs/architecture-indexing.png)
+
+![Architecture Flow Diagram](docs/architecture-flow.png)
 
 For full rationale and trade-offs, see [docs/decisions.md](docs/decisions.md) (17 ADRs).
 
