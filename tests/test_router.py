@@ -30,6 +30,7 @@ def _make_intent(
     extracted_query: str = "test query",
     reasoning: str = "test",
     is_basket_query: bool = False,
+    prefers_deals: bool = False,
 ) -> IntentResult:
     return IntentResult(
         language=language,
@@ -40,6 +41,7 @@ def _make_intent(
         target_partner=target_partner,
         reasoning=reasoning,
         is_basket_query=is_basket_query,
+        prefers_deals=prefers_deals,
     )
 
 
@@ -101,12 +103,14 @@ class MockVectorStore:
         self.search_call_count = 0
         self.search_queries: list[str] = []
         self.last_partner_filter = "not_called"
+        self.last_promo_only = False
 
-    async def search(self, query, top_k=10, partner_filter=None):
+    async def search(self, query, top_k=10, partner_filter=None, promo_only=False):
         self.search_called = True
         self.search_call_count += 1
         self.search_queries.append(query)
         self.last_partner_filter = partner_filter
+        self.last_promo_only = promo_only
         return self._results
 
     async def add(self, products) -> None:
@@ -383,7 +387,7 @@ async def test_router_drops_low_relevance_subqueries(monkeypatch):
         def __init__(self):
             self.search_queries: list[str] = []
 
-        async def search(self, query, top_k=10, partner_filter=None):
+        async def search(self, query, top_k=10, partner_filter=None, promo_only=False):
             self.search_queries.append(query)
             if query == "glitter eyeshadow":
                 # All results below threshold — should be dropped
@@ -428,7 +432,7 @@ async def test_router_preserves_subquery_metadata(monkeypatch):
     product_a = _sample_product(Partner.edeka)
 
     class MockVectorStoreFiltered:
-        async def search(self, query, top_k=10, partner_filter=None):
+        async def search(self, query, top_k=10, partner_filter=None, promo_only=False):
             if query == "setting spray":
                 return [(product_a, 0.1)]  # below threshold
             return [(product_a, 0.8)]      # above threshold
@@ -453,3 +457,69 @@ async def test_router_preserves_subquery_metadata(monkeypatch):
     assert response.debug_dropped_queries == ["setting spray"]
     # Dropped is a strict subset of expanded
     assert set(response.debug_dropped_queries).issubset(set(response.debug_expanded_queries))
+
+
+@pytest.mark.asyncio
+async def test_router_applies_promo_filter_when_prefers_deals():
+    """prefers_deals=True causes search to be called with promo_only=True."""
+    intent = _make_intent(
+        specificity=Specificity.specific,
+        confidence=0.9,
+        extracted_query="cheap wireless mouse",
+        prefers_deals=True,
+    )
+    mock_store = MockVectorStore([(_sample_product(Partner.amazon), 0.85)])
+    router = Router(
+        intent_agent=MockIntentAgent(intent),
+        clarification_agent=MockClarificationAgent(_sample_clarification()),
+        vector_store=mock_store,
+        ranker=MockRanker([_sample_recommendation()]),
+    )
+
+    response = await router.handle("cheap wireless mouse")
+
+    assert mock_store.last_promo_only is True
+    assert response.promo_fallback is False
+    assert response.response_type == "recommendations"
+
+
+@pytest.mark.asyncio
+async def test_router_falls_back_when_no_promo_matches():
+    """If promo_only search returns no results, router retries without filter and sets promo_fallback=True."""
+    intent = _make_intent(
+        specificity=Specificity.specific,
+        confidence=0.9,
+        extracted_query="günstige Windeln",
+        prefers_deals=True,
+    )
+    product = _sample_product(Partner.dm)
+
+    class MockFallbackStore:
+        def __init__(self):
+            self.call_count = 0
+            self.promo_only_calls: list[bool] = []
+
+        async def search(self, query, top_k=10, partner_filter=None, promo_only=False):
+            self.call_count += 1
+            self.promo_only_calls.append(promo_only)
+            if promo_only:
+                return []  # promo filter finds nothing
+            return [(product, 0.88)]
+
+        async def add(self, products): pass
+        async def count(self): return 1
+
+    mock_store = MockFallbackStore()
+    router = Router(
+        intent_agent=MockIntentAgent(intent),
+        clarification_agent=MockClarificationAgent(_sample_clarification()),
+        vector_store=mock_store,
+        ranker=MockRanker([_sample_recommendation()]),
+    )
+
+    response = await router.handle("günstige Windeln")
+
+    assert mock_store.call_count == 2
+    assert mock_store.promo_only_calls == [True, False]
+    assert response.promo_fallback is True
+    assert response.response_type == "recommendations"

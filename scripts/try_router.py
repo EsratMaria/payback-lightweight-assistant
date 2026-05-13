@@ -12,7 +12,6 @@ from app.models.schemas import UserContext
 
 QUERIES = [
     # "I need stuff for a pasta dinner",
-    # "Bitte zeige mir Angebote für günstige Windeln",
     # "open Amazon for me",
     # "something for my dog",
     # "etwas Schönes für meinen Mann",
@@ -26,9 +25,12 @@ QUERIES = [
     # "ingredients for tiramisu",
     # "alles für ein Wochenende am See",
     # "Geburtstagsparty Snacks",
-    "ingredient to cook a meal like spaghetti or chicken for a dinner date with girlfriend",
+    # "ingredient to cook a meal like spaghetti or chicken for a dinner date with girlfriend",
     # "stuffs for glowing skin",
     # "USB-C charger",
+    "Bitte zeige mir Angebote für günstige Windeln",
+    "günstige Bio Tomaten",
+    "cheap wireless mouse",
 ]
 
 _profiles_raw = json.loads(
@@ -59,8 +61,11 @@ async def main() -> None:
             print(f"  partner: {response.intent_result.target_partner}")
             print(f"  latency: {response.latency_ms:.0f}ms")
             print(f"  cost:    €{response.estimated_cost_eur:.5f}")
-            print(f"  basket:  {response.intent_result.is_basket_query}")
+            print(f"  basket:      {response.intent_result.is_basket_query}")
+            print(f"  deals:       {response.intent_result.prefers_deals}")
             if response.response_type == "recommendations":
+                if response.promo_fallback:
+                    print("  promo_fallback: True (no promo products matched; showing all)")
                 if response.intent_result.is_basket_query and response.debug_expanded_queries:
                     print(f"  proposed: {response.debug_expanded_queries}")
                     if response.debug_dropped_queries:

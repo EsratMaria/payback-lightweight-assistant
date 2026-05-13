@@ -210,6 +210,7 @@ class Router:
         ):
             expanded_queries: list[str] | None = None
             dropped_queries: list[str] | None = None
+            promo_fallback = False
             did_expand = intent.is_basket_query and self.query_expander is not None
 
             if did_expand:
@@ -219,17 +220,43 @@ class Router:
                 sub_queries = list(expanded.sub_queries)
                 expanded_queries = sub_queries
 
-                all_results: dict[str, tuple] = {}
-                _dropped: list[str] = []
-
+                # First pass: collect relevance-filtered results per sub-query,
+                # with promo filter applied if requested.
+                per_sub: dict[str, list[tuple]] = {}
                 for sub_q in sub_queries:
                     results = await self.vector_store.search(
-                        sub_q, top_k=8, partner_filter=intent.target_partner
+                        sub_q,
+                        top_k=8,
+                        partner_filter=intent.target_partner,
+                        promo_only=intent.prefers_deals,
                     )
-                    filtered = [
+                    per_sub[sub_q] = [
                         (p, s) for p, s in results
                         if s >= settings.expansion_min_relevance
                     ]
+
+                # If every sub-query returned nothing under the promo filter,
+                # fall back to unfiltered retrieval for the whole basket.
+                if intent.prefers_deals and all(len(r) == 0 for r in per_sub.values()):
+                    promo_fallback = True
+                    logger.info(
+                        "promo_only basket filter yielded no results for query=%r; falling back",
+                        intent.extracted_query,
+                    )
+                    per_sub = {}
+                    for sub_q in sub_queries:
+                        results = await self.vector_store.search(
+                            sub_q, top_k=8, partner_filter=intent.target_partner
+                        )
+                        per_sub[sub_q] = [
+                            (p, s) for p, s in results
+                            if s >= settings.expansion_min_relevance
+                        ]
+
+                # Merge per-sub results; track sub-queries that had no matches.
+                all_results: dict[str, tuple] = {}
+                _dropped: list[str] = []
+                for sub_q, filtered in per_sub.items():
                     if not filtered:
                         _dropped.append(sub_q)
                         logger.info(
@@ -245,11 +272,24 @@ class Router:
                 retrieved = sorted(all_results.values(), key=lambda x: -x[1])[:15]
                 dropped_queries = _dropped if _dropped else None
             else:
+                # Single-query path with promo filter + graceful fallback.
                 retrieved = await self.vector_store.search(
                     intent.extracted_query,
                     top_k=10,
                     partner_filter=intent.target_partner,
+                    promo_only=intent.prefers_deals,
                 )
+                if intent.prefers_deals and not retrieved:
+                    promo_fallback = True
+                    logger.info(
+                        "promo_only filter yielded no results for query=%r; falling back",
+                        intent.extracted_query,
+                    )
+                    retrieved = await self.vector_store.search(
+                        intent.extracted_query,
+                        top_k=10,
+                        partner_filter=intent.target_partner,
+                    )
 
             ranked = await self.ranker.rank(retrieved, user_context)
             latency_ms = (time.perf_counter() - start) * 1000
@@ -267,6 +307,7 @@ class Router:
                 ),
                 debug_expanded_queries=expanded_queries,
                 debug_dropped_queries=dropped_queries,
+                promo_fallback=promo_fallback,
             )
 
         # ------------------------------------------------------------------

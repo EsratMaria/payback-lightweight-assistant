@@ -43,7 +43,11 @@ QUERY PATTERN:
       )),
       top_k => 10,
       distance_type => 'COSINE'
-    );
+    )
+    -- partner_filter: WHERE base.partner = @partner_filter
+    -- promo_only:     WHERE base.active_promo = TRUE
+    -- both:           WHERE base.partner = @partner_filter AND base.active_promo = TRUE
+    ;
 
 MIGRATION PATH:
     1. Provision Vertex AI embedding model + BigQuery dataset via Terraform
@@ -82,8 +86,11 @@ class BigQueryVectorStore(VectorStore):
         query: str,
         top_k: int = 10,
         partner_filter: Optional[Partner] = None,
+        promo_only: bool = False,
     ) -> list[tuple[Product, float]]:
         # TODO: run VECTOR_SEARCH parameterised query; deserialise rows into Product
+        # Apply partner_filter and promo_only as WHERE clauses on the outer SELECT
+        # (see QUERY PATTERN in module docstring)
         raise NotImplementedError
 
     async def count(self) -> int:

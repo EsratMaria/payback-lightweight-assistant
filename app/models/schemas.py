@@ -101,6 +101,16 @@ class IntentResult(BaseModel):
             "The router uses this signal to trigger LLM-driven query expansion before retrieval."
         ),
     )
+    prefers_deals: bool = Field(
+        default=False,
+        description=(
+            "True if the query explicitly seeks promotions, deals, or discounts "
+            "(German: 'Angebote', 'günstig', 'Rabatt', 'Aktion'; English: 'deal', "
+            "'sale', 'cheap', 'offers'). When true, the router restricts retrieval "
+            "to products with active_promo=True, with graceful fallback if no "
+            "promoted products match the query."
+        ),
+    )
 
 
 class ExpandedQueries(BaseModel):
@@ -196,6 +206,13 @@ class AssistantResponse(BaseModel):
             "Sub-queries proposed by the LLM during expansion that were dropped "
             "because they returned no catalog results above the relevance threshold. "
             "Surfaced for transparency — production might hide this behind a debug flag."
+        ),
+    )
+    promo_fallback: bool = Field(
+        default=False,
+        description=(
+            "True if prefers_deals=True triggered a promo-only filter but no "
+            "promoted products matched, causing a fallback to unfiltered search."
         ),
     )
 

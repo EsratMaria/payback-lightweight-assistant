@@ -107,6 +107,7 @@ class LocalChromaStore(VectorStore):
         query: str,
         top_k: int = 10,
         partner_filter: Optional[Partner] = None,
+        promo_only: bool = False,
     ) -> list[tuple[Product, float]]:
         count = self._collection.count()
         if count == 0:
@@ -115,14 +116,27 @@ class LocalChromaStore(VectorStore):
         embedder = get_embedder()
         query_embedding = embedder.encode([query])[0]
 
+        # Build where clause combining partner and promo filters.
+        if partner_filter and promo_only:
+            where_clause: dict | None = {"$and": [
+                {"partner": partner_filter.value},
+                {"active_promo": True},
+            ]}
+        elif partner_filter:
+            where_clause = {"partner": partner_filter.value}
+        elif promo_only:
+            where_clause = {"active_promo": True}
+        else:
+            where_clause = None
+
         # Cap n_results to actual collection size to avoid ChromaDB errors
         # when top_k exceeds the number of stored documents.
         query_kwargs: dict = {
             "query_embeddings": [query_embedding.tolist()],
             "n_results": min(top_k, count),
         }
-        if partner_filter is not None:
-            query_kwargs["where"] = {"partner": partner_filter.value}
+        if where_clause is not None:
+            query_kwargs["where"] = where_clause
 
         results = self._collection.query(**query_kwargs)
 

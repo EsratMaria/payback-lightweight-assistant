@@ -24,6 +24,7 @@ class VectorStore(ABC):
         query: str,
         top_k: int = 10,
         partner_filter: Optional[Partner] = None,
+        promo_only: bool = False,
     ) -> list[tuple[Product, float]]:
         """Return up to `top_k` (product, cosine_similarity) pairs for `query`.
 
@@ -31,6 +32,7 @@ class VectorStore(ABC):
             query: Raw natural-language query string (embedding happens inside).
             top_k: Maximum number of results to return.
             partner_filter: If provided, restrict results to this partner only.
+            promo_only: If True, restrict results to products with active_promo=True.
 
         Returns:
             List of (Product, score) sorted descending by score.

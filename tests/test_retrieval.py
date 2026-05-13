@@ -138,3 +138,46 @@ def test_idempotent_upsert(temp_store, sample_products):
     asyncio.run(temp_store.add(sample_products))
     asyncio.run(temp_store.add(sample_products))
     assert asyncio.run(temp_store.count()) == len(sample_products)
+
+
+def test_promo_only_filter_excludes_non_promo_products(temp_store):
+    """promo_only=True returns only products with active_promo=True."""
+    products = [
+        Product(
+            product_id="promo-001",
+            partner=Partner.dm,
+            name="Balea Shampoo Angebot",
+            description="Pflegeshampoo mit Arganöl, jetzt im Angebot.",
+            category="personal_care",
+            price_eur=1.49,
+            active_promo=True,
+            promo_text="20% Rabatt!",
+        ),
+        Product(
+            product_id="no-promo-001",
+            partner=Partner.dm,
+            name="Balea Duschgel",
+            description="Pflegendes Duschgel mit Sheabutter.",
+            category="personal_care",
+            price_eur=1.29,
+            active_promo=False,
+        ),
+        Product(
+            product_id="no-promo-002",
+            partner=Partner.dm,
+            name="Balea Bodymilk",
+            description="Reichhaltige Bodymilk für trockene Haut.",
+            category="personal_care",
+            price_eur=1.99,
+            active_promo=False,
+        ),
+    ]
+    asyncio.run(temp_store.add(products))
+
+    promo_results = asyncio.run(temp_store.search("Balea Pflegeprodukt", top_k=10, promo_only=True))
+    assert len(promo_results) == 1
+    assert promo_results[0][0].product_id == "promo-001"
+    assert promo_results[0][0].active_promo is True
+
+    all_results = asyncio.run(temp_store.search("Balea Pflegeprodukt", top_k=10, promo_only=False))
+    assert len(all_results) == 3
