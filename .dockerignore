@@ -1,0 +1,40 @@
+# Python artifacts
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+
+# Secrets — never bake credentials into an image
+.env
+
+# Dev/CI tooling — not needed at runtime
+tests/
+notebooks/
+evals/
+evals/results/
+scripts/
+docs/
+
+# Markdown (README is the only exception — kept for image metadata)
+*.md
+!README.md
+
+# Git
+.git/
+.gitignore
+.dockerignore
+
+# Docker files themselves
+Dockerfile
+docker-compose.yml
+
+# ChromaDB test dirs created by pytest (real index in chroma_db/ is included)
+chroma_test_*/
+
+# macOS
+.DS_Store

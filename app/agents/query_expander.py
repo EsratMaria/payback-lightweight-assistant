@@ -3,6 +3,10 @@
 Decomposes basket-style queries into 3-5 related sub-queries so the retrieval
 layer can surface a full shopping-basket result rather than only literal matches.
 
+Catalog-grounded: before calling the LLM, a cheap pre-flight retrieval discovers
+which categories actually exist in the catalog for this query. That list is passed
+to the expansion prompt so the LLM proposes sub-queries within real catalog scope.
+
 Only invoked when the intent agent flags is_basket_query=True. For single-item
 queries the router skips this module entirely.
 """
@@ -118,7 +122,7 @@ class QueryExpander:
 
 
 def get_default_query_expander() -> QueryExpander:
-    """Returns a QueryExpander backed by the default LLM provider and vector store."""
+    """Returns a QueryExpander backed by the default LLM and vector store."""
     return QueryExpander(
         llm=ClaudeClient(),
         vector_store=LocalChromaStore(persist_dir=settings.chroma_persist_dir),

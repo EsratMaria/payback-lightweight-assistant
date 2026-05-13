@@ -56,7 +56,8 @@ data/
   user_profiles.json   # mock user profiles for testing
 tests/
 scripts/
-  deploy_gcp.sh
+  deploy.sh          # Cloud Run deployment (see scripts/deploy.README.md)
+  deploy.README.md   # deploy prerequisites, rotation, teardown, cost
   load_test.py
   cost_analysis.py
 docs/
@@ -132,3 +133,31 @@ All loaded via `app/config.py` (pydantic-settings). Key vars:
 - `VECTOR_STORE` — "local" (ChromaDB) or "bigquery"
 - `CHROMA_PERSIST_DIR` — path for ChromaDB persistence (default `./chroma_db`)
 - `GCP_PROJECT_ID` / `BIGQUERY_DATASET` — only needed when `VECTOR_STORE=bigquery`
+
+## Deployment
+
+The service is packaged as a Docker image and deployed to GCP Cloud Run.
+
+**Build prerequisites** (must be done before `docker build` or `./scripts/deploy.sh`):
+1. Run `python -m app.retrieval.ingest --rebuild` to populate `chroma_db/` — the vector
+   index is baked into the image at build time.
+
+**Local Docker test:**
+```bash
+docker build -t payback-assistant:test .
+docker run --rm -p 8080:8080 \
+  -e UNIFIED_ENDPOINT_BASE_URL_ANTHROPIC=https://... \
+  -e UNIFIED_ENDPOINT_KEY=sk-ant-... \
+  payback-assistant:test
+curl http://localhost:8080/health
+```
+
+**Deploy to Cloud Run:**
+```bash
+chmod +x scripts/deploy.sh
+./scripts/deploy.sh
+```
+
+The script handles Secret Manager setup, API enablement, Cloud Build–based image
+construction, and service deployment. See `scripts/deploy.README.md` for the full
+guide (prerequisites, key rotation, teardown, cost expectations).
