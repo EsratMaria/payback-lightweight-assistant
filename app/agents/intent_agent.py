@@ -78,7 +78,7 @@ class IntentAgent:
 
     The agent is LLM-provider-agnostic: it accepts any LLMClient implementation
     via constructor injection. This means tests can pass a MockLLMClient, and
-    swapping Claude for Gemini in production requires no changes here.
+    swapping in a different provider requires no changes here — only a new LLMClient implementation.
 
     The router (Step 5) uses BOTH `specificity` and `confidence` together:
     - Routes to clarification if specificity == "vague".
@@ -110,17 +110,16 @@ class IntentAgent:
 def get_default_intent_agent() -> IntentAgent:
     """Return an IntentAgent wired to the configured default LLM provider.
 
-    Reads settings.default_llm_provider. Currently only 'claude' is implemented;
-    'gemini' raises NotImplementedError pointing to the GeminiClient stub.
+    Currently only 'claude' is implemented. To add a new provider, implement
+    the LLMClient interface (app/llm/base.py) and add a branch here.
     """
     provider = settings.default_llm_provider
 
     if provider == "claude":
         return IntentAgent(ClaudeClient())
 
-    if provider == "gemini":
-        raise NotImplementedError(
-            "Gemini client deferred — see app/llm/gemini_client.py"
-        )
-
-    raise ValueError(f"Unknown LLM provider: {provider!r}")
+    raise ValueError(
+        f"Unknown LLM provider: {provider!r}. Only 'claude' is currently implemented. "
+        "To add a new provider, implement the LLMClient interface in app/llm/base.py "
+        "and register it here."
+    )

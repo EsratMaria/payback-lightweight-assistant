@@ -45,8 +45,8 @@ The judge uses **Claude Opus** (`claude-opus-4-7`).
 Deliberately different models reduce self-preference bias: a model that generated
 a response tends to rate its own outputs more favourably. Using a larger, different
 model as the judge is the standard mitigation within a single-provider setup.
-The ideal mitigation is cross-provider evaluation (e.g. Gemini or GPT-4 as judge),
-which is on the roadmap.
+The ideal mitigation is cross-provider evaluation (e.g. GPT-4 as judge);
+the abstract `LLMClient` interface makes this a single class addition.
 
 ---
 

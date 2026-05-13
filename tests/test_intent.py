@@ -202,17 +202,11 @@ def test_factory_claude(monkeypatch):
     assert isinstance(agent.llm, ClaudeClient)
 
 
-def test_factory_gemini_raises(monkeypatch):
-    import app.config
-    monkeypatch.setattr(app.config.settings, "default_llm_provider", "gemini")
-    with pytest.raises(NotImplementedError):
-        get_default_intent_agent()
-
-
 def test_factory_unknown_raises(monkeypatch):
+    """Any non-claude provider raises ValueError with a message pointing to extensibility."""
     import app.config
     monkeypatch.setattr(app.config.settings, "default_llm_provider", "magic-llm-9000")
-    with pytest.raises(ValueError, match="Unknown LLM provider"):
+    with pytest.raises(ValueError, match="Only 'claude' is currently implemented"):
         get_default_intent_agent()
 
 

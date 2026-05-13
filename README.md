@@ -3,7 +3,7 @@
 ## Overview
 
 Backend microservice that accepts natural-language queries in German or English, classifies
-intent via an LLM (Claude or Gemini), retrieves relevant products from a local ChromaDB
+intent via Claude, retrieves relevant products from a local ChromaDB
 vector store, re-ranks them with a loyalty-aware scoring function, and returns structured
 JSON — powering the in-app product discovery feature for the PAYBACK loyalty programme.
 
@@ -14,7 +14,7 @@ JSON — powering the in-app product discovery feature for the PAYBACK loyalty p
 | 1 | Schemas & Pydantic v2 models (`schemas.py`) | Done |
 | 2 | Synthetic catalog generation (~700 products, 3 partners) | Done |
 | 3 | Retrieval layer — Embedder, ChromaDB, ingest | Done |
-| 4 | LLM clients — ClaudeClient (tool-use), GeminiClient (stub) | Done |
+| 4 | LLM clients — ClaudeClient (tool-use), LLMClient interface for extensibility | Done |
 | 5 | Intent agent — classification + prompt engineering | Done |
 | 5 | Router + clarification agent | Pending |
 | 6 | Loyalty ranker | Pending |
@@ -60,8 +60,6 @@ uvicorn app.main:app --reload
 
 ### LLM clients (`app/llm/`)
 - **ClaudeClient** — forced structured output via Anthropic tool-use (`tool_choice={"type":"tool","name":"respond"}`); Pydantic validation + one retry with warning log on failure
-- **GeminiClient** — stub with full implementation sketch in module docstring; toggle via `DEFAULT_LLM_PROVIDER=gemini`
-
 ### Intent agent (`app/agents/intent_agent.py`)
 Classifies each query into a fully typed `IntentResult`:
 - `language` — `"de"` or `"en"`

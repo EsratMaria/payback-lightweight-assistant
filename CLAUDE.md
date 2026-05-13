@@ -13,7 +13,7 @@ Takes a user query (EN/DE), classifies intent via LLM, routes to the right actio
 | Layer | Tech |
 |---|---|
 | API | FastAPI + Pydantic v2 |
-| LLM | Anthropic Claude (primary), Google Gemini (secondary) |
+| LLM | Anthropic Claude via `ClaudeClient`; extensible via `LLMClient` interface |
 | Embeddings | sentence-transformers `paraphrase-multilingual-MiniLM-L12-v2` (384-dim) |
 | Vector store | ChromaDB with `hnsw:space=cosine` (local dev), BigQuery VECTOR_SEARCH (prod) |
 | Config | pydantic-settings + python-dotenv |
@@ -29,9 +29,8 @@ app/
   models/
     schemas.py     # ALL Pydantic I/O models — source of truth for types
   llm/
-    base.py        # LLMClient ABC
+    base.py        # LLMClient ABC — interface for additional providers
     claude_client.py
-    gemini_client.py
   retrieval/
     vector_store.py  # VectorStore ABC
     local_store.py   # ChromaDB impl
@@ -64,7 +63,7 @@ docs/
 1. ✅ Schemas & validation — `schemas.py` complete; all Pydantic v2 models.
 2. ✅ Catalog generation — ~700 products across dm, EDEKA, Amazon via `data/generate_catalogs.py` (Claude Opus 4.5, tool-use forced output, 80% acceptance threshold, exponential backoff).
 3. ✅ Retrieval — `Embedder` (lazy-load, `lru_cache` singleton) → `LocalChromaStore` (ChromaDB cosine, upsert idempotency, `1.0 − distance` clamped similarity) → `ingest.py` (returns `{partner: count}` summary, `--rebuild` flag).
-4. ✅ LLM clients — `ClaudeClient` (tool-use, Pydantic retry, warning logger) complete; `GeminiClient` stub with full implementation sketch.
+4. ✅ LLM clients — `ClaudeClient` (tool-use, Pydantic retry, warning logger) complete; `LLMClient` interface ready for additional providers via dependency injection.
 5. ✅ Intent agent — `IntentAgent` + `get_default_intent_agent()` factory complete; `target_partner` set on any recognized partner mention, null on unsupported/multiple. `router.py` and `clarification.py` still pending.
 6. ⬜ Ranking — implement `LoyaltyRanker` (α=0.6, β=0.3, γ=0.1).
 7. ⬜ API — wire everything into `routes.py`, replace stub.
@@ -77,7 +76,7 @@ docs/
 - **Async throughout.** All I/O methods (LLM, vector store, embedder) must be `async`.
 - **Single source of truth for models.** Add new fields to `schemas.py` first, then update callers.
 - **Both LLM providers must stay in sync.** Any prompt change must be reflected in both
-  `claude_client.py` and `gemini_client.py`.
+  `claude_client.py`. Adding a new provider means a new class implementing `LLMClient` — no other file changes.
 - **Config via env only.** Never hardcode API keys, model names, or file paths — use `settings`.
 - **tool-use for structured LLM output.** Always use `tool_choice={"type":"tool","name":"respond"}` — never ask Claude to "reply in JSON". This eliminates markdown wrapping and JSONDecodeError at extraction.
 - **target_partner semantics.** Set whenever a recognized partner (dm, edeka, amazon) is named, regardless of specificity. Null if no partner, multiple partners, or an unsupported partner (REWE, Lidl, etc.) is mentioned. The router, not the agent, decides what to do with it.
@@ -125,8 +124,7 @@ python scripts/load_test.py --rps 20 --duration 60
 All loaded via `app/config.py` (pydantic-settings). Key vars:
 - `UNIFIED_ENDPOINT_BASE_URL_ANTHROPIC` — base URL for the Anthropic unified endpoint
 - `UNIFIED_ENDPOINT_KEY` — API key for the unified endpoint
-- `GOOGLE_API_KEY` — Google Gemini key
-- `DEFAULT_LLM_PROVIDER` — "claude" or "gemini"
+- `DEFAULT_LLM_PROVIDER` — currently only "claude" is implemented; see `LLMClient` interface for extensibility
 - `VECTOR_STORE` — "local" (ChromaDB) or "bigquery"
 - `CHROMA_PERSIST_DIR` — path for ChromaDB persistence (default `./chroma_db`)
 - `GCP_PROJECT_ID` / `BIGQUERY_DATASET` — only needed when `VECTOR_STORE=bigquery`

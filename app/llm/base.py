@@ -15,10 +15,10 @@ class LLMError(Exception):
 class LLMClient(ABC):
     """Contract: give a prompt and a Pydantic schema, get back a validated instance.
 
-    The caller never knows — or cares — which LLM provider is underneath. Adding a
-    new provider means a new class that satisfies this interface. Nothing else in the
-    codebase changes: IntentAgent, the router, and every LLM-using component depend
-    only on LLMClient, never on ClaudeClient or GeminiClient directly.
+    Currently implemented by ClaudeClient. The interface is designed for additional
+    providers — for example, a Gemini, GPT-4, or Vertex AI client would implement the
+    same `structured_completion` method and slot in via dependency injection without
+    changing any caller code.
 
     Implementations MUST:
     - Force structured output (tool-use, response_schema, or equivalent mechanism)

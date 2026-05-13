@@ -15,13 +15,6 @@ PRICING = {
         "avg_input_tokens": 400,
         "avg_output_tokens": 150,
     },
-    "gemini": {
-        "model": "gemini-1.5-flash",
-        "input_per_1m": 0.075,
-        "output_per_1m": 0.30,
-        "avg_input_tokens": 400,
-        "avg_output_tokens": 150,
-    },
 }
 
 EUR_PER_USD = 0.92
@@ -51,7 +44,7 @@ def estimate(provider: str, requests_per_day: int) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--requests-per-day", type=int, default=10_000)
-    parser.add_argument("--provider", choices=["claude", "gemini"], default="claude")
+    parser.add_argument("--provider", choices=["claude"], default="claude")
     args = parser.parse_args()
     estimate(args.provider, args.requests_per_day)
 

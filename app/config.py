@@ -11,9 +11,8 @@ class Settings(BaseSettings):
 
     unified_endpoint_base_url_anthropic: str = Field(default="", alias="UNIFIED_ENDPOINT_BASE_URL_ANTHROPIC")
     unified_endpoint_key: str = Field(default="", alias="UNIFIED_ENDPOINT_KEY")
-    google_api_key: str = Field(default="", alias="GOOGLE_API_KEY")
 
-    default_llm_provider: Literal["claude", "gemini"] = Field(
+    default_llm_provider: str = Field(
         default="claude", alias="DEFAULT_LLM_PROVIDER"
     )
 
