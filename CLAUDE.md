@@ -2,6 +2,11 @@
 
 This file gives Claude Code the context it needs to work effectively in this repo.
 
+## Architecture decisions
+
+The full set of decisions made during the build — with rationale and tradeoffs —
+lives in `docs/decisions.md`. New contributors should skim that first.
+
 ## Project purpose
 
 Backend microservice for the PAYBACK loyalty app's lightweight assistant feature.
@@ -75,8 +80,7 @@ docs/
 - **Pydantic v2 only.** Never use `dict` for I/O; always use a schema from `schemas.py`.
 - **Async throughout.** All I/O methods (LLM, vector store, embedder) must be `async`.
 - **Single source of truth for models.** Add new fields to `schemas.py` first, then update callers.
-- **Both LLM providers must stay in sync.** Any prompt change must be reflected in both
-  `claude_client.py`. Adding a new provider means a new class implementing `LLMClient` — no other file changes.
+- **Single LLM provider (Claude).** All prompts live in the agent files. Adding a new provider means a new class implementing `LLMClient` — no other file changes.
 - **Config via env only.** Never hardcode API keys, model names, or file paths — use `settings`.
 - **tool-use for structured LLM output.** Always use `tool_choice={"type":"tool","name":"respond"}` — never ask Claude to "reply in JSON". This eliminates markdown wrapping and JSONDecodeError at extraction.
 - **target_partner semantics.** Set whenever a recognized partner (dm, edeka, amazon) is named, regardless of specificity. Null if no partner, multiple partners, or an unsupported partner (REWE, Lidl, etc.) is mentioned. The router, not the agent, decides what to do with it.
