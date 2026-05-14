@@ -39,4 +39,4 @@ All LLM calls use Anthropic tool-use with forced structured output (`tool_choice
 | Basket search (Branch B + expansion) | 2 | ~€0.005 |
 | Vague / clarification (Branch C) | 2 | ~€0.005 |
 
-Estimates based on Claude Sonnet input/output token pricing at the configured token budgets (400 input / 150 output tokens for intent; 300 / 80 for expansion; 600 / 100 for clarification).
+Estimates based on Claude Sonnet input/output token pricing.
