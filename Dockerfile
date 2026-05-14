@@ -1,13 +1,20 @@
 # ---------------------------------------------------------------------------
-# Stage 1 — builder: install Python dependencies into an isolated prefix.
+# Stage 1 — builder: install Python dependencies into a virtual environment.
+# Using a venv (rather than --prefix) lets the second pip install see packages
+# already installed by the first, which is required for the CPU-torch trick.
 # Build tools stay here and never reach the runtime image.
 # ---------------------------------------------------------------------------
 FROM python:3.11-slim AS builder
 
 WORKDIR /build
+RUN python -m venv /venv
 COPY requirements.txt .
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir --prefix=/install -r requirements.txt
+# Install CPU-only PyTorch first so sentence-transformers doesn't pull in
+# the 1 GB+ CUDA build from PyPI. Cloud Run has no GPU.
+RUN /venv/bin/pip install --upgrade pip && \
+    /venv/bin/pip install --no-cache-dir \
+        torch --index-url https://download.pytorch.org/whl/cpu && \
+    /venv/bin/pip install --no-cache-dir -r requirements.txt
 
 
 # ---------------------------------------------------------------------------
@@ -20,8 +27,9 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy the installed packages from the builder stage.
-COPY --from=builder /install /usr/local
+# Copy the virtual environment from the builder stage.
+COPY --from=builder /venv /venv
+ENV PATH="/venv/bin:$PATH"
 
 # Run as a non-root user — no home directory, no login shell.
 RUN useradd --no-create-home --shell /bin/false appuser

@@ -196,10 +196,10 @@ python scripts/cost_analysis.py --requests-per-day 50000 --provider claude
 
 ## Why this script exists but was not run for the submission
 
-The project was built and evaluated in a local environment using a university-managed
+The project was built and evaluated in a local environment using a managed
 Anthropic unified endpoint (`UNIFIED_ENDPOINT_BASE_URL_ANTHROPIC` + `UNIFIED_ENDPOINT_KEY`).
 Deploying to Cloud Run would require a personal GCP project with billing enabled and
-an API key that can be exposed outside that managed endpoint — neither of which was
+an API key that can be exposed outside that managed endpoint — neither of which seemed
 appropriate to provision as part of a course submission.
 
 The Dockerfile, `.dockerignore`, and `deploy.sh` are fully functional and have been
@@ -209,4 +209,4 @@ minimization, non-root runtime user, Cloud Build–based container construction 
 design artefacts rather than as a live deployed service.
 
 To deploy for real, a reviewer with a GCP project would run `./scripts/deploy.sh`
-following the steps above. The entire process takes under 10 minutes from a cold start.
+following the steps above. The entire process should take under 10 minutes from a cold start.

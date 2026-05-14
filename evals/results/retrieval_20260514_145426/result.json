@@ -16,8 +16,8 @@
       ],
       "missed_ids": [
         "edeka-0008",
-        "edeka-0064",
-        "edeka-0098"
+        "edeka-0098",
+        "edeka-0064"
       ],
       "notes": "German single-noun, should surface EDEKA spaghetti products"
     },
@@ -33,11 +33,11 @@
         "edeka-0191"
       ],
       "missed_ids": [
-        "dm-0003",
+        "dm-0027",
+        "dm-0039",
         "dm-0052",
         "dm-0078",
-        "dm-0039",
-        "dm-0027"
+        "dm-0003"
       ],
       "notes": "German single-noun, should surface dm diaper products"
     },
@@ -67,11 +67,11 @@
         "dm-0174"
       ],
       "missed_ids": [
-        "dm-0003",
-        "dm-0052",
-        "dm-0078",
+        "dm-0027",
+        "dm-0014",
         "dm-0039",
-        "dm-0014"
+        "dm-0052",
+        "dm-0078"
       ],
       "notes": "English single-noun, cross-lingual, should surface dm diaper products"
     },
@@ -87,10 +87,10 @@
         "dm-0068"
       ],
       "missed_ids": [
-        "edeka-0078",
-        "edeka-0010",
-        "edeka-0128",
         "edeka-0017",
+        "edeka-0078",
+        "edeka-0128",
+        "edeka-0059",
         "edeka-0158"
       ],
       "notes": "English single-noun, should surface EDEKA joghurt products"
@@ -123,11 +123,11 @@
         "dm-0137"
       ],
       "missed_ids": [
-        "edeka-0026",
-        "edeka-0051",
+        "edeka-0076",
+        "edeka-0101",
         "edeka-0001",
-        "edeka-0126",
-        "edeka-0101"
+        "edeka-0151",
+        "edeka-0051"
       ],
       "notes": "German multi-word, organic milk from EDEKA"
     },
@@ -144,10 +144,10 @@
       ],
       "missed_ids": [
         "amazon-0052",
+        "amazon-0102",
         "amazon-0127",
-        "amazon-0002",
         "amazon-0152",
-        "amazon-0102"
+        "amazon-0002"
       ],
       "notes": "English multi-word, Amazon electronics"
     },
@@ -163,10 +163,10 @@
         "edeka-0081"
       ],
       "missed_ids": [
-        "edeka-0069",
-        "edeka-0174",
         "edeka-0022",
+        "edeka-0069",
         "edeka-0149",
+        "edeka-0174",
         "edeka-0124"
       ],
       "notes": "German multi-word, tomato-based products from EDEKA"
@@ -184,10 +184,10 @@
       ],
       "missed_ids": [
         "edeka-0008",
-        "edeka-0146",
         "edeka-0048",
-        "edeka-0064",
-        "edeka-0098"
+        "edeka-0098",
+        "edeka-0146",
+        "edeka-0064"
       ],
       "notes": "Brand name query, should surface Barilla pasta from EDEKA"
     },
@@ -203,10 +203,10 @@
         "dm-0095"
       ],
       "missed_ids": [
-        "dm-0066",
         "dm-0054",
-        "dm-0077",
-        "dm-0032"
+        "dm-0032",
+        "dm-0066",
+        "dm-0077"
       ],
       "notes": "Brand name query, should surface Nivea products from dm"
     },
@@ -222,11 +222,11 @@
         "amazon-0152"
       ],
       "missed_ids": [
-        "amazon-0052",
-        "amazon-0049",
-        "amazon-0195",
         "amazon-0027",
-        "amazon-0024"
+        "amazon-0052",
+        "amazon-0195",
+        "amazon-0024",
+        "amazon-0049"
       ],
       "notes": "Brand name query, Logitech products from Amazon"
     },
@@ -274,14 +274,14 @@
         "dm-0004"
       ],
       "missed_ids": [
-        "dm-0138",
         "dm-0002",
-        "dm-0001",
+        "dm-0032",
         "dm-0051",
-        "dm-0024"
+        "dm-0126",
+        "dm-0001"
       ],
       "notes": "Cross-lingual: English query, dm German skin care products"
     }
   ],
-  "duration_seconds": 9.940371999982744
+  "duration_seconds": 10.729470083955675
 }

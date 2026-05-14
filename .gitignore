@@ -10,3 +10,4 @@ chroma_db/
 .DS_Store
 dist/
 build/
+.claude/

@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
+
+# No actual GCP-specific implementation yet, 
+#but this script will build the Docker image and deploy to Cloud Run when ready.
+
 # Deploy payback-assistant to Cloud Run.
 # Usage: ./scripts/deploy_gcp.sh [PROJECT_ID] [REGION]
+
 set -euo pipefail
 
 PROJECT=${1:-${GCP_PROJECT_ID:-""}}

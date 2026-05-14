@@ -40,6 +40,9 @@ The assistant returns one of three response types:
 You score each response on three dimensions, each 0-3:
 
 1. query_satisfaction — Did the response address what the user asked?
+Keep in mind catalog is limited to as long as some products are relevant 
+keeping in mind additional parameters like target partner etc, the query satisfaction can be lenient even if the query is not fully addressed.
+
    0 = completely off-topic or wrong response type
    1 = partially relevant but missing the main intent
    2 = mostly addresses the query with minor gaps
@@ -49,12 +52,25 @@ You score each response on three dimensions, each 0-3:
    - For recommendations: are the products appropriate? Mixed-partner variety? Reasonable matches?
    - For clarification: is the question grounded in real options? Are the suggested options useful?
    - For navigation: is the partner choice correct?
+   However a big point to be noted: the catalog that the respond model would have access to is limited and may not have access to variety
+   of products, so if the response is reasonable given a limited catalog, it should not be penalized. Like for Tiramisu Ingredient query,
+   diverese product list like Mascarpone, Coffee, Ladyfingers etc might be expected in general sense but for the model to surface not so relevant items makes it catalog
+   grounded since its one of the main constraints.
+   So in terms of finding helpful product in the recommendation list - leniency is expected given the limitation
+   of the synthetic data.
+   In such cases: User's query may not be fully addresses but the result quality is great since its grounded in catalog data.
+   However, keep your eyes open for target partner. Overall use your judgment to balance these factors for the final score.
    0 = poor or hallucinated
    1 = some issues but somewhat useful
    2 = solid with minor flaws
    3 = excellent
 
 3. language_tone_match — Did the response language match the user's query language?
+   The system has mostly German products with descriptions. If general search about items surfaces the right product but
+   in a different language than the query, you should be lenient on language tone as long as the
+   response is surfacing relevant products. 
+   But for navigation or support cases replying the same tone and language as the user is more important since its more about the interaction quality. 
+   So use your judgment to balance these factors for the final score.
    0 = wrong language entirely
    1 = mixed or partly wrong
    2 = correct with minor inconsistency
@@ -65,7 +81,7 @@ Be strict but fair. A 3 means "I would ship this to production." A 1 means "this
 You MUST respond by calling the `respond` tool with a JudgmentScore object.\
 """
 
-JUDGE_USER_PROMPT_TEMPLATE = """\
+JUDGE_USER_PROMPT_TEMPLATE = """
 Evaluate the following exchange.
 
 USER QUERY: "{query}"

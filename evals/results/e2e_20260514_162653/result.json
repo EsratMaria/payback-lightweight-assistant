@@ -1,0 +1,307 @@
+{
+  "total_queries": 10,
+  "mean_total": 7.4,
+  "mean_query_satisfaction": 2.4,
+  "mean_result_quality": 2.1,
+  "mean_language_tone": 2.9,
+  "high_variance_queries": [],
+  "per_query": [
+    {
+      "query": "stuff for a pasta dinner",
+      "response_type": "recommendations",
+      "runs": [
+        {
+          "query_satisfaction": 3,
+          "result_quality": 2,
+          "language_tone_match": 2,
+          "reasoning": "Query satisfaction: The response provides core pasta dinner staples (pasta, tomatoes, butter) covering the main intent. Result quality: Mixed-partner variety (edeka, dm), with relevant items like spaghetti and tomatoes, though missing things like sauce/cheese, still solid given catalog limits. Language tone match: User wrote in English but products are described in German, which is acceptable for product search given catalog constraints."
+        },
+        {
+          "query_satisfaction": 3,
+          "result_quality": 3,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The response covers core pasta dinner essentials (pasta, tomatoes, butter) across multiple partners. Result quality: Good mixed-partner variety with relevant items including multiple pasta options and complementary ingredients. Language tone match: German product descriptions are appropriate for the PAYBACK catalog and match the neutral English query reasonably."
+        },
+        {
+          "query_satisfaction": 3,
+          "result_quality": 3,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The response covers core pasta dinner essentials (pasta, tomatoes, butter) addressing the broad request well. Result quality: Good mixed-partner variety (edeka, dm) with relevant items including multiple pasta options and tomatoes for sauce. Language tone match: German product descriptions are appropriate given the catalog and the query uses no specific language cues."
+        }
+      ],
+      "median_query_satisfaction": 3,
+      "median_result_quality": 3,
+      "median_language_tone": 3,
+      "total_median": 9,
+      "variance_flag": false
+    },
+    {
+      "query": "ingredients for tiramisu",
+      "response_type": "recommendations",
+      "runs": [
+        {
+          "query_satisfaction": 0,
+          "result_quality": 0,
+          "language_tone_match": 2,
+          "reasoning": "Query satisfaction: None of the products (croissants, müsli, chicken breast) are tiramisu ingredients like mascarpone, ladyfingers, espresso, or cocoa. Result quality: The recommendations are completely irrelevant to tiramisu, showing no grounding in the query intent even with a limited catalog. Language tone: Products are in German while the query is English, which is acceptable for a German catalog though slightly inconsistent."
+        },
+        {
+          "query_satisfaction": 0,
+          "result_quality": 0,
+          "language_tone_match": 2,
+          "reasoning": "query_satisfaction: None of the products are tiramisu ingredients (no mascarpone, ladyfingers, coffee, eggs, cocoa), so the response fails to address the intent. result_quality: Products are real catalog items but completely irrelevant to tiramisu, showing poor matching even accounting for catalog limits. language_tone_match: Response is in German matching the catalog convention, acceptable for an English query surfacing German products."
+        },
+        {
+          "query_satisfaction": 0,
+          "result_quality": 0,
+          "language_tone_match": 2,
+          "reasoning": "Query satisfaction: None of the products (croissants, müsli, chicken breast) are tiramisu ingredients like mascarpone, ladyfingers, coffee, or cocoa. Result quality: The recommendations are entirely irrelevant to the query, showing no grounded match even within a limited catalog. Language tone match: Products are in German while query is English, but this is acceptable for a German-catalog system."
+        }
+      ],
+      "median_query_satisfaction": 0,
+      "median_result_quality": 0,
+      "median_language_tone": 2,
+      "total_median": 2,
+      "variance_flag": false
+    },
+    {
+      "query": "wireless mouse",
+      "response_type": "recommendations",
+      "runs": [
+        {
+          "query_satisfaction": 2,
+          "result_quality": 1,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The response directly returns wireless mice matching the user's request. Result quality: All five results are duplicates of the same product from a single partner, showing no variety despite the catalog likely having alternatives. Language tone match: Query is in English and response is in English, consistent match."
+        },
+        {
+          "query_satisfaction": 3,
+          "result_quality": 1,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The response returns wireless mice as requested, directly addressing the query. Result quality: All five results are the exact same product (Logitech MX Master 3S) with no variety in brand, price, or partner, which is a significant flaw despite being on-topic. Language tone match: Query is in English and product descriptions are in English, matching well."
+        },
+        {
+          "query_satisfaction": 3,
+          "result_quality": 1,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The response directly returns wireless mice matching the query intent. Result quality: All five results are the exact same product (Logitech MX Master 3S) with no variety in brand, price, or partner, which is a significant flaw. Language tone match: Query is in English and product descriptions are in English, consistent match."
+        }
+      ],
+      "median_query_satisfaction": 3,
+      "median_result_quality": 1,
+      "median_language_tone": 3,
+      "total_median": 7,
+      "variance_flag": false
+    },
+    {
+      "query": "Products for glowing skin from dm",
+      "response_type": "recommendations",
+      "runs": [
+        {
+          "query_satisfaction": 2,
+          "result_quality": 1,
+          "language_tone_match": 2,
+          "reasoning": "Query satisfaction: The response addresses skincare from dm with at least one highly relevant item (Vitamin C Serum for glowing skin), though several items like Sagrotan spray and mascara are off-topic. Result quality: Partner targeting is correct (all dm), but the mix includes irrelevant products (disinfectant spray, mascara) that don't relate to glowing skin, lowering quality. Language tone match: User queried in English; response descriptions are in German, but products are catalog-grounded so leniency applies."
+        },
+        {
+          "query_satisfaction": 2,
+          "result_quality": 2,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The response provides dm products with some relevant to glowing skin (Vitamin C serum, sunscreen) but includes off-topic items like Sagrotan spray and mascara. Result quality: Partner targeting is correct (all dm), and the Vitamin C serum is a strong match, but inclusion of disinfectant spray and mascara dilutes relevance. Language tone match: German product descriptions are appropriate given the catalog and the query mixes English with a German retailer."
+        },
+        {
+          "query_satisfaction": 2,
+          "result_quality": 2,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The response addresses skincare from dm with the Vitamin C serum directly relevant for glowing skin, but several items (Sagrotan, mascara) are off-topic. Result quality: Partner targeting is correct (all dm), and within catalog limits the Vitamin C serum, sunscreen, and shower gel are reasonable, though Sagrotan and mascara are weak fits. Language tone match: German product descriptions are expected for dm and align well, with no jarring mismatch for the English query."
+        }
+      ],
+      "median_query_satisfaction": 2,
+      "median_result_quality": 2,
+      "median_language_tone": 3,
+      "total_median": 7,
+      "variance_flag": false
+    },
+    {
+      "query": "something for my dog",
+      "response_type": "clarification",
+      "runs": [
+        {
+          "query_satisfaction": 3,
+          "result_quality": 3,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The clarification appropriately narrows down a vague request about dog products. Result quality: The four categories are well-grounded, mutually exclusive, and cover the main dog product types. Language tone match: The user wrote in English and the response is in English, matching well."
+        },
+        {
+          "query_satisfaction": 3,
+          "result_quality": 3,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The vague query appropriately triggers a clarification, which is the right response type. Result quality: The four options are well-grounded, mutually distinct, and cover the main dog-product categories. Language tone match: The user wrote in English and the clarification is in English, matching consistently."
+        },
+        {
+          "query_satisfaction": 3,
+          "result_quality": 3,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The clarification appropriately narrows down the very vague request. Result quality: Options are well-structured, comprehensive, and grounded in typical pet categories. Language tone match: User wrote in English and response is in English, consistent."
+        }
+      ],
+      "median_query_satisfaction": 3,
+      "median_result_quality": 3,
+      "median_language_tone": 3,
+      "total_median": 9,
+      "variance_flag": false
+    },
+    {
+      "query": "etwas Schönes für meinen Mann",
+      "response_type": "clarification",
+      "runs": [
+        {
+          "query_satisfaction": 3,
+          "result_quality": 2,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The vague query genuinely needs clarification, so asking is the right move. Result quality: Options are grounded and varied, though some (Joghurt, Rouladen) feel like odd \"gift\" suggestions for a husband. Language tone match: Response is fully in German matching the user's query."
+        },
+        {
+          "query_satisfaction": 3,
+          "result_quality": 2,
+          "language_tone_match": 3,
+          "reasoning": "Query Satisfaction: The vague query appropriately triggers clarification asking for gift category direction. Result Quality: Options are reasonable and grounded but slightly odd mix (joghurt/eis as gift for husband feels weak), though anchored in catalog. Language Tone Match: Fully German, matching the user's query perfectly."
+        },
+        {
+          "query_satisfaction": 3,
+          "result_quality": 2,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The vague gift query is appropriately handled with a clarification question to narrow down intent. Result quality: The options are grounded in catalog categories but somewhat odd for a gift for a husband (joghurt, rouladen feel less giftable than grooming or hobby). Language tone match: Response is fully in German matching the user's query."
+        }
+      ],
+      "median_query_satisfaction": 3,
+      "median_result_quality": 2,
+      "median_language_tone": 3,
+      "total_median": 8,
+      "variance_flag": false
+    },
+    {
+      "query": "alles für ein Wochenende am See",
+      "response_type": "recommendations",
+      "runs": [
+        {
+          "query_satisfaction": 2,
+          "result_quality": 2,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The query asks for \"everything for a weekend at the lake\" which suggests grilling/picnic items, and the response provides relevant grill/picnic foods though missing drinks, sunscreen, or outdoor gear. Result quality: Products are reasonable picnic/BBQ items but all from a single partner (edeka) lacking variety expected for a weekend trip. Language tone match: Product descriptions are consistently in German matching the query."
+        },
+        {
+          "query_satisfaction": 2,
+          "result_quality": 2,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The recommendations cover grilling/picnic food which fits a lake weekend, but miss other typical needs like drinks, sunscreen, or outdoor gear. Result quality: Products are reasonable BBQ/picnic items grounded in catalog, though all from a single partner (edeka) lacks variety. Language tone match: Response is fully in German matching the user's query."
+        },
+        {
+          "query_satisfaction": 2,
+          "result_quality": 2,
+          "language_tone_match": 3,
+          "reasoning": "query_satisfaction: The query asks for \"everything for a weekend at the lake\" which suggests grilling, snacks, drinks, and outdoor items, and the response covers grilling/food basics but misses drinks, snacks, and non-food essentials. result_quality: Products are reasonable grill/picnic items grounded in the EDEKA catalog, though all from one partner with no variety (no drinks, chips, sunscreen, etc.). language_tone_match: Response content is fully in German, matching the user's query language."
+        }
+      ],
+      "median_query_satisfaction": 2,
+      "median_result_quality": 2,
+      "median_language_tone": 3,
+      "total_median": 7,
+      "variance_flag": false
+    },
+    {
+      "query": "open Amazon for me",
+      "response_type": "navigation",
+      "runs": [
+        {
+          "query_satisfaction": 3,
+          "result_quality": 3,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The user asked to open Amazon and the assistant correctly navigates to Amazon. Result quality: The partner choice is exactly right and matches the explicit request. Language tone match: The user wrote in English and the brief navigation label is language-neutral/English-compatible."
+        },
+        {
+          "query_satisfaction": 3,
+          "result_quality": 3,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The user asked to open Amazon and the assistant correctly navigates to Amazon. Result quality: The partner choice is exactly right and matches the explicit request. Language tone match: The user's query was in English and the navigation response is neutral/English-compatible."
+        },
+        {
+          "query_satisfaction": 3,
+          "result_quality": 3,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The navigation directly fulfills the user's request to open Amazon. Result quality: Correct partner target selected for the request. Language tone match: Minimal text but 'Navigate to' is English matching the English query."
+        }
+      ],
+      "median_query_satisfaction": 3,
+      "median_result_quality": 3,
+      "median_language_tone": 3,
+      "total_median": 9,
+      "variance_flag": false
+    },
+    {
+      "query": "take me to the shop",
+      "response_type": "clarification",
+      "runs": [
+        {
+          "query_satisfaction": 3,
+          "result_quality": 2,
+          "language_tone_match": 3,
+          "reasoning": "query_satisfaction: The user's request is vague (\"take me to the shop\"), so asking which partner to visit is an appropriate clarification. result_quality: The suggested options are real PAYBACK partners and useful, though limited to three choices. language_tone_match: The user wrote in English and the clarification is in English, matching well."
+        },
+        {
+          "query_satisfaction": 3,
+          "result_quality": 2,
+          "language_tone_match": 3,
+          "reasoning": "query_satisfaction: The user's request is vague (\"the shop\"), and asking which partner they want is an appropriate clarification. result_quality: The suggested partners are reasonable popular PAYBACK partners, though limited in variety. language_tone_match: The user wrote in English and the clarification is in English, matching well."
+        },
+        {
+          "query_satisfaction": 3,
+          "result_quality": 2,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The user's request is vague (\"the shop\"), so asking for clarification on which partner is appropriate. Result quality: The suggested options are real PAYBACK partners and reasonable popular choices to disambiguate. Language tone match: User wrote in English and the clarification is in English, matching well."
+        }
+      ],
+      "median_query_satisfaction": 3,
+      "median_result_quality": 2,
+      "median_language_tone": 3,
+      "total_median": 8,
+      "variance_flag": false
+    },
+    {
+      "query": "how do I redeem my points",
+      "response_type": "clarification",
+      "runs": [
+        {
+          "query_satisfaction": 2,
+          "result_quality": 3,
+          "language_tone_match": 3,
+          "reasoning": "query_satisfaction: The assistant correctly identifies it can't handle account questions and redirects to support, which is appropriate for an out-of-scope query. result_quality: The clarification provides a useful support link and reasonable alternative options, well-grounded in the assistant's actual capabilities. language_tone_match: The user asked in English and the response is fully in English with a matching support link."
+        },
+        {
+          "query_satisfaction": 2,
+          "result_quality": 3,
+          "language_tone_match": 3,
+          "reasoning": "Query satisfaction: The assistant correctly identifies this as a support question outside its scope and redirects to PAYBACK support, which is appropriate. Result quality: The clarification provides a useful support link and reasonable alternative options, well-grounded in the assistant's actual capabilities. Language tone match: The user asked in English and the response is fully in English with an English contact URL."
+        },
+        {
+          "query_satisfaction": 2,
+          "result_quality": 3,
+          "language_tone_match": 3,
+          "reasoning": "query_satisfaction: The assistant correctly identifies it can't answer account/points questions and redirects to support, which is appropriate given scope. result_quality: The clarification options are useful and grounded, offering both a support link and shopping alternatives. language_tone_match: User wrote in English and the response is in English with an English support URL."
+        }
+      ],
+      "median_query_satisfaction": 2,
+      "median_result_quality": 3,
+      "median_language_tone": 3,
+      "total_median": 8,
+      "variance_flag": false
+    }
+  ],
+  "judge_human_agreement": {
+    "query_satisfaction": 0.8888888888888888,
+    "result_quality": 0.7777777777777778,
+    "language_tone": 1.0,
+    "overall": 0.8888888888888888
+  },
+  "duration_seconds": 506.7276953328401
+}

@@ -78,7 +78,7 @@ def _render_report(result, timestamp: str, model: str) -> str:
             f"Overall accuracy is {result.overall_accuracy:.1%} across {result.total_queries} queries. "
             f"The weakest dimension is **{weakest[0]}** at {weakest[1]:.1%}. "
             f"There are {len(result.failures)} failing queries. "
-            "Review the failures section above — clusters in a single field often indicate a prompt gap."
+            "Review the failures section above."
         ),
         "",
     ]

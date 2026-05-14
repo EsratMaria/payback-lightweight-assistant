@@ -1,0 +1,54 @@
+{
+  "total_queries": 25,
+  "language_accuracy": 1.0,
+  "intent_accuracy": 1.0,
+  "specificity_accuracy": 1.0,
+  "is_basket_accuracy": 1.0,
+  "target_partner_accuracy": 0.92,
+  "overall_accuracy": 0.92,
+  "failures": [
+    {
+      "query": "Zutaten für Lasagne",
+      "wrong_fields": [
+        "target_partner"
+      ],
+      "expected": {
+        "language": "de",
+        "intent": "search",
+        "specificity": "specific",
+        "is_basket_query": true,
+        "target_partner": null
+      },
+      "actual": {
+        "language": "de",
+        "intent": "search",
+        "specificity": "specific",
+        "is_basket_query": true,
+        "target_partner": "edeka"
+      },
+      "notes": "basket German recipe"
+    },
+    {
+      "query": "Morgenroutine Pflege",
+      "wrong_fields": [
+        "target_partner"
+      ],
+      "expected": {
+        "language": "de",
+        "intent": "search",
+        "specificity": "specific",
+        "is_basket_query": true,
+        "target_partner": null
+      },
+      "actual": {
+        "language": "de",
+        "intent": "search",
+        "specificity": "specific",
+        "is_basket_query": true,
+        "target_partner": "dm"
+      },
+      "notes": "basket German, beauty regimen"
+    }
+  ],
+  "duration_seconds": 107.10771312494762
+}

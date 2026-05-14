@@ -134,10 +134,6 @@ def _render_report(result, timestamp: str) -> str:
         "",
         "---",
         "",
-        "<!-- TODO: Once Maria has filled in human_rating_* fields in judge_validation.yaml,",
-        "re-run this eval to populate the Judge–Human Agreement section above.",
-        "Target: ≥75% within-1-point agreement per dimension. Below 70% means",
-        "the judge prompt needs revision. -->",
     ]
 
     return "\n".join(lines)

@@ -48,7 +48,7 @@ For full rationale and trade-offs, see [docs/decisions.md](docs/decisions.md) (1
 | `POST` | `/assist` | Main endpoint — classify, retrieve, rank, return |
 | `GET` | `/health` | Liveness probe |
 | `GET` | `/users` | List mock user profiles |
-| `GET` | `/users/{user_id}` | Single user profile |
+| `GET` | `/users/{user_id}` | Single user profile | `user_new`, `user_edeka_heavy`, `user_balanced` |
 | `GET` | `/partners` | List supported partners |
 | `GET` | `/stats` | Catalog item counts per partner |
 
@@ -58,7 +58,7 @@ Interactive docs at `/docs` (Swagger UI) and `/redoc`.
 ```bash
 curl -X POST http://localhost:8000/assist \
   -H 'Content-Type: application/json' \
-  -d '{"query": "günstige Windeln bei dm", "user_id": "user_edeka_heavy"}'
+  -d '{"query": "Vitamin D Tabletten", "user_id": "user_balanced"}'
 ```
 
 **Sample response fields:**
@@ -70,20 +70,19 @@ curl -X POST http://localhost:8000/assist \
     "intent": "search",
     "specificity": "specific",
     "confidence": 0.97,
-    "target_partner": "dm",
+    "target_partner": "None",
     "is_basket_query": false,
-    "prefers_deals": true,
-    "extracted_query": "Windeln dm günstig",
+    "prefers_deals": false,
+    "extracted_query": "Vitamin D Tabletten",
     "reasoning": "..."
   },
   "recommendations": [...],
   "promo_fallback": false,
-  "latency_ms": 4200,
-  "estimated_cost_eur": 0.0032
+  "latency_ms": 6074,
+  "estimated_cost_eur": 0.00320
 }
 ```
 
----
 
 ## Key features
 
@@ -93,7 +92,7 @@ embedding space. An English query for "milk" surfaces the German-language EDEKA 
 "Bio Vollmilch". Validated by a cross-lingual regression test in `tests/test_retrieval.py`.
 
 ### Catalog-grounded query expansion
-For basket queries ("pasta dinner", "Geburtstagsparty"), the router:
+For basket queries ("pasta dinner", "Geburtstagsparty", "essentials for moving into a new house"), the router:
 1. Runs a pre-flight retrieval to discover available catalog categories
 2. Tells the LLM expander exactly which categories exist (prevents hallucinated sub-queries)
 3. Searches each sub-query independently; drops sub-queries below a relevance threshold (0.45)
@@ -105,13 +104,16 @@ passes `promo_only=True` to the vector store, restricting results to `active_pro
 products. If no promoted products match, the filter is dropped and `promo_fallback=True`
 is set in the response.
 
-### Loyalty ranker
+### Loyalty ranker (Payback-specific twist)
 ```
 final_score = α·semantic_score + β·commercial_boost + γ·diversity_bonus
             = 0.6·cosine_sim  + 0.3·(multiplier·promo) + 0.1·partner_diversity
 ```
 Cold-start users (no purchase history) get diversity bonus from the result-set partner
 distribution rather than from a user profile.
+```
+diversity_bonus = 1.0 - (count of partner in top-k results / top-k result count)
+```
 
 ### Evaluation infrastructure (`evals/`)
 - **Intent eval** — accuracy + confusion matrix against a labelled dataset
@@ -155,11 +157,10 @@ uvicorn app.main:app --reload
 | API | FastAPI + Pydantic v2 | Async, auto-validation, OpenAPI docs |
 | LLM | Anthropic Claude (tool-use) | Forced structured output, no JSON parsing fragility |
 | Embeddings | `paraphrase-multilingual-MiniLM-L12-v2` | EN+DE in one model, 384-dim, fast |
-| Vector store | ChromaDB (local), BigQuery stub (prod) | No infra for dev; BQ joins loyalty data at scale |
+| Vector store | ChromaDB (local), BigQuery stub (prod) (no actual implementation) | No infra for dev; BQ joins loyalty data at scale |
 | Config | pydantic-settings + python-dotenv | Type-safe env vars |
 | Tests | pytest + pytest-asyncio | 57 unit tests |
 | Container | Docker multi-stage (CPU torch) | ~511 MB image, non-root, Cloud Run ready |
-| Deploy | GCP Cloud Run + Secret Manager | Serverless, scales to zero, credential hygiene |
 
 ---
 
@@ -201,13 +202,13 @@ docker run --rm -p 8080:8080 \
 curl http://localhost:8080/health
 ```
 
-**Cloud Run:**
+**Cloud Run: (stub-only || No live URL on cloud)**
 ```bash
 chmod +x scripts/deploy.sh
 ./scripts/deploy.sh   # handles Secret Manager, Cloud Build, health check
 ```
 
-See [scripts/deploy.README.md](scripts/deploy.README.md) for prerequisites, key rotation,
+See [scripts/deploy.README.md](scripts/deploy.README.md) for Why this script exists but was not run for the submission, prerequisites, key rotation,
 teardown steps, and cost expectations (~€5/month for prototype workloads).
 
 ---
@@ -223,4 +224,3 @@ teardown steps, and cost expectations (~€5/month for prototype workloads).
 python scripts/cost_analysis.py --requests-per-day 50000 --provider claude
 ```
 
-Cloud Run infrastructure adds < €5/month at prototype scale (scales to zero between requests).

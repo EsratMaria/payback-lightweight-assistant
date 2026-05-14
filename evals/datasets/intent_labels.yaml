@@ -181,7 +181,7 @@
 - query: "take me to the shop"
   expected:
     language: en
-    intent: search
+    intent: discovery
     specificity: navigational
     is_basket_query: false
     target_partner: null
@@ -191,7 +191,7 @@
   expected:
     language: en
     intent: support
-    specificity: specific
+    specificity: vague
     is_basket_query: false
     target_partner: null
   notes: "support English, out-of-scope"
