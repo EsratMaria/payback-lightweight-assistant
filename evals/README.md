@@ -62,7 +62,6 @@ To validate that the Opus judge aligns with human judgment:
    - `3` = excellent, would ship
 3. Re-run `python evals/run_e2e_eval.py`.
 4. The report will populate the **Judge–Human Agreement** section.
-   - Target: ≥75% within-1-point agreement per dimension.
    - Below 70% on any dimension: the judge prompt needs revision.
 
 ---
@@ -72,14 +71,6 @@ To validate that the Opus judge aligns with human judgment:
 1. **Single-provider judge.** Opus and Sonnet are both Anthropic models — correlated biases exist.
 2. **Small datasets.** 25/15/10 queries are sufficient for early signal, not statistical confidence.
 3. **Static ground truth.** `retrieval_labels.yaml` product IDs will drift as catalogs change.
-4. **No user feedback loop.** Judge scores are a proxy for user satisfaction, not a substitute.
-5. **Intent labels are auto-generated.** Review `datasets/intent_labels.yaml` before treating accuracy numbers as authoritative.
+4. **Intent labels are auto-generated.** Review `datasets/intent_labels.yaml` before treating accuracy numbers as authoritative.
 
 ---
-
-## TODO for Maria
-
-- [ ] Review auto-generated labels in `datasets/intent_labels.yaml` — verify `is_basket_query` and `specificity` for edge cases.
-- [ ] Check `datasets/retrieval_labels.yaml` — confirm product IDs are still in the catalog after any re-generation.
-- [ ] Run the E2E eval once, then hand-rate the 10 queries in `datasets/judge_validation.yaml`.
-- [ ] Re-run `python evals/run_e2e_eval.py` to get the judge–human agreement number.
