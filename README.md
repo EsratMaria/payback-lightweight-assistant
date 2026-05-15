@@ -25,8 +25,8 @@ loyalty-aware scoring function, and returns structured JSON.
 | 12 | Evaluation infrastructure — intent eval, retrieval P@5/R@5, E2E LLM-as-judge | Done |
 | 13 | Tests — 57 unit tests across all layers | Done |
 | 14 | Demo notebook — 20 cells, 7 query types, live output | Done |
-| 15 | Docker — multi-stage image, CPU-only torch, non-root user (experimental) | Done |
-| 16 | Cloud Run deployment — deploy.sh, Secret Manager, deploy.README.md (locally) | Done |
+| 15 | Docker — multi-stage image, CPU-only torch, non-root user (experimental) | Done | Demo |
+| 16 | Cloud Run deployment — deploy.sh, Secret Manager, deploy.README.md (locally) | Done | Demo |
 | 17 | Architecture Decision Records — 17 ADRs in docs/decisions.md | Done |
 
 ---
@@ -117,7 +117,7 @@ diversity_bonus = 1.0 - (count of partner in top-k results / top-k result count)
 
 ### Evaluation infrastructure (`evals/`)
 - **Intent eval** — accuracy + confusion matrix against a labelled dataset
-- **Retrieval eval** — Precision@5 and Recall@5 per query
+- **Retrieval eval** — Precision @ top_k = 5 and Recall @ top_k = 5 per query
 - **E2E eval** — LLM-as-judge (Claude Opus) scoring query satisfaction, result quality,
   and language/tone match; 3-run median to suppress variance; judge-human agreement scaffold
 
@@ -209,7 +209,7 @@ chmod +x scripts/deploy.sh
 ```
 
 See [scripts/deploy.README.md](scripts/deploy.README.md) for Why this script exists but was not run for the submission, prerequisites, key rotation,
-teardown steps, and cost expectations (~€5/month for prototype workloads).
+teardown steps, and cost expectations.
 
 ---
 
@@ -221,6 +221,6 @@ teardown steps, and cost expectations (~€5/month for prototype workloads).
 | 50 000 requests/day | ~€160/day |
 
 ```bash
-python scripts/cost_analysis.py --requests-per-day 50000 --provider claude
+python scripts/cost_analysis.py --requests-per-day 1000 --provider claude
 ```
 
